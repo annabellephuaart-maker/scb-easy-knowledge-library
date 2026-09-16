@@ -26,11 +26,15 @@ const streamScopes = entries
 const streams = streamScopes.map((scope) => ({
   scope,
   label: scope.data.name ?? scope.data.workstream ?? scope.id,
-  evidence: entries.filter(
-    (e) =>
-      e.data.artefact_type !== 'stream-scope' &&
-      e.data.workstream === scope.data.workstream
-  ),
+  evidence: entries
+    .filter(
+      (e) =>
+        e.data.artefact_type !== 'stream-scope' &&
+        e.data.workstream === scope.data.workstream
+    )
+    // Order comes from the artefacts, so the research controls the reading
+    // order. Retired pages carry a high page_order and sink to the bottom.
+    .sort((a, b) => (a.data.page_order ?? 50) - (b.data.page_order ?? 50)),
 }));
 
 // Study-level artefacts, and anything not yet filed to a stream.
@@ -108,6 +112,7 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
                     <li>
                       <a
                         href={`/${item.id}`}
+                        class={item.data.status === 'retired' ? 'retired' : undefined}
                         aria-current={here === `/${item.id}` ? 'page' : undefined}
                       >
                         {item.data.name ?? item.data.title ?? item.id}
@@ -334,6 +339,11 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         padding-left: var(--p-space-06);
       }
 
+      .sidenav li a.retired {
+        color: var(--s-text-helper);
+        text-decoration: line-through;
+        text-decoration-thickness: 1px;
+      }
       .sidenav .stream {
         margin-top: var(--p-space-03);
       }

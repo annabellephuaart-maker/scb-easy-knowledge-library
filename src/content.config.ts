@@ -22,6 +22,8 @@ const research = defineCollection({
       /** Which evidence stream this artefact belongs to. */
       workstream: z.string().optional(),
       stream_order: z.number().optional(),
+      page_order: z.number().optional(),
+      superseded_by: z.array(z.string()).optional(),
       artefact_type: z.string().optional(),
       question: z.string().optional(),
       input_type: z.string().optional(),
