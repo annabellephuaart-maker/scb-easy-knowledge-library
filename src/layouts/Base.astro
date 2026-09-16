@@ -42,7 +42,7 @@ const unfiled = entries.filter(
 
 // Phase two. Listed so the shape of the library is visible, marked absent
 // rather than linked to pages that do not exist.
-const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guidelines'];
+const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
 ---
 
 <!doctype html>
@@ -67,80 +67,85 @@ const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guideline
 
     <div class="shell">
       <nav class="sidenav" aria-label="Primary">
-        <details open>
-          <summary>About this Library</summary>
-          <ul>
+        <section class="grp">
+          <h2>About this Library</h2>
+          <ul class="flat">
             <li>
               <a href="/" aria-current={here === '' ? 'page' : undefined}>Overview</a>
             </li>
           </ul>
-        </details>
+        </section>
 
-        {
-          streams.map(({ scope, label, evidence }, i) => (
-            <details open={here.startsWith(`/${scope.id}`) || evidence.some((e) => here === `/${e.id}`)}>
-              <summary>
-                <span class="n">{i + 1}</span>
-                {label}
-              </summary>
-              <ul>
-                <li>
-                  <a
-                    href={`/${scope.id}`}
-                    aria-current={here === `/${scope.id}` ? 'page' : undefined}
-                  >
-                    Scope &amp; questions
-                  </a>
-                </li>
-                {evidence.map((item) => (
+        <section class="grp">
+          <h2>Research</h2>
+
+          {
+            unfiled.length > 0 && (
+              <details open={unfiled.some((e) => here === `/${e.id}`)}>
+                <summary>Study</summary>
+                <ul>
+                  {unfiled.map((item) => (
+                    <li>
+                      <a
+                        href={`/${item.id}`}
+                        aria-current={here === `/${item.id}` ? 'page' : undefined}
+                      >
+                        {item.data.name ?? item.data.title ?? item.id}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )
+          }
+
+          {
+            streams.map(({ scope, label, evidence }) => (
+              <details
+                open={
+                  here.startsWith(`/${scope.id}`) || evidence.some((e) => here === `/${e.id}`)
+                }
+              >
+                <summary>{label}</summary>
+                <ul>
                   <li>
                     <a
-                      href={`/${item.id}`}
-                      aria-current={here === `/${item.id}` ? 'page' : undefined}
+                      href={`/${scope.id}`}
+                      aria-current={here === `/${scope.id}` ? 'page' : undefined}
                     >
-                      {item.data.name ?? item.data.title ?? item.id}
+                      Scope &amp; questions
                     </a>
                   </li>
-                ))}
-                {evidence.length === 0 && <li class="note">No evidence filed yet.</li>}
-              </ul>
-            </details>
-          ))
-        }
+                  {evidence.map((item) => (
+                    <li>
+                      <a
+                        href={`/${item.id}`}
+                        aria-current={here === `/${item.id}` ? 'page' : undefined}
+                      >
+                        {item.data.name ?? item.data.title ?? item.id}
+                      </a>
+                    </li>
+                  ))}
+                  {evidence.length === 0 && <li class="note">No evidence filed yet.</li>}
+                </ul>
+              </details>
+            ))
+          }
+        </section>
 
-        {
-          unfiled.length > 0 && (
-            <details open>
-              <summary>Study</summary>
-              <ul>
-                {unfiled.map((item) => (
-                  <li>
-                    <a
-                      href={`/${item.id}`}
-                      aria-current={here === `/${item.id}` ? 'page' : undefined}
-                    >
-                      {item.data.name ?? item.data.title ?? item.id}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )
-        }
-
-        {
-          deferred.map((section) => (
-            <details class="empty">
-              <summary>
-                {section}
-                <span class="badge">phase 2</span>
-              </summary>
-              <ul>
-                <li class="note">Nothing here until tokens and components exist.</li>
-              </ul>
-            </details>
-          ))
-        }
+        <section class="grp">
+          <h2>Design System</h2>
+          {
+            designSystem.map((section) => (
+              <details class="empty">
+                <summary>{section}</summary>
+                <ul>
+                  <li class="note">Nothing here until tokens and components exist.</li>
+                </ul>
+              </details>
+            ))
+          }
+        </section>
       </nav>
 
       <div class="body">
@@ -218,54 +223,32 @@ const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guideline
         height: calc(100vh - var(--c-header-height));
         overflow-y: auto;
         border-right: 1px solid var(--s-border-subtle);
-        padding: var(--p-space-04) var(--p-space-03) var(--p-space-08);
+        padding-bottom: var(--p-space-08);
       }
-      .sidenav details + details {
-        margin-top: var(--p-space-01);
+
+      /* A group is a labelled band, not a collapsible. */
+      .grp {
+        padding: var(--p-space-05) var(--p-space-04);
       }
-      .sidenav details.empty {
+      .grp + .grp {
         border-top: 1px solid var(--s-border-subtle);
-        margin-top: var(--p-space-02);
-        padding-top: var(--p-space-01);
       }
-      .sidenav summary {
-        cursor: pointer;
-        list-style: none;
-        padding: var(--p-space-03) var(--p-space-04);
+      .grp h2 {
+        margin: 0 0 var(--p-space-03);
+        padding: 0 var(--p-space-03);
+        font-size: 0.9375rem;
         font-weight: 600;
-        border-radius: var(--c-radius);
-        display: flex;
-        align-items: center;
-        gap: var(--p-space-02);
+        color: var(--s-text-primary);
       }
-      .sidenav summary::-webkit-details-marker {
-        display: none;
-      }
-      .sidenav summary::after {
-        content: '';
-        width: 0.45rem;
-        height: 0.45rem;
-        margin-left: auto;
-        border-right: 1.5px solid var(--s-text-secondary);
-        border-bottom: 1.5px solid var(--s-text-secondary);
-        transform: rotate(45deg) translate(-1px, -1px);
-        flex: none;
-      }
-      .sidenav details[open] > summary::after {
-        transform: rotate(-135deg) translate(-1px, -1px);
-      }
-      .sidenav summary:hover {
-        background: var(--s-hover-ui);
-      }
+
       .sidenav ul {
         list-style: none;
         margin: 0;
-        padding: 0 0 var(--p-space-02);
+        padding: 0;
       }
       .sidenav li a {
         display: block;
-        padding: var(--p-space-02) var(--p-space-04);
-        margin: 1px 0;
+        padding: var(--p-space-02) var(--p-space-03);
         color: var(--s-text-secondary);
         text-decoration: none;
         border-radius: var(--c-radius);
@@ -279,44 +262,58 @@ const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guideline
         color: var(--s-brand-strong);
         font-weight: 600;
       }
-      .sidenav .n {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.125rem;
-    height: 1.125rem;
-    flex: none;
-    border-radius: 50%;
-    background: var(--s-selected-ui);
-    color: var(--s-brand-strong);
-    font-family: var(--s-font-mono);
-    font-size: 0.625rem;
-    font-weight: 500;
-  }
-  .sidenav .group {
-        margin: var(--p-space-03) 0 var(--p-space-01);
-        padding: 0 var(--p-space-04);
-        font-family: var(--s-font-mono);
-        font-size: 0.6875rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--s-text-helper);
+
+      /* Items nested under a collapsible sit under its label, not its chevron. */
+      .sidenav details ul li a {
+        padding-left: var(--p-space-06);
       }
-      .sidenav details.empty > summary {
-        color: var(--s-text-helper);
-        font-weight: 400;
+      .sidenav .flat li a {
+        padding-left: var(--p-space-03);
       }
-      .sidenav .badge {
-        font-family: var(--s-font-mono);
-        font-size: 0.625rem;
-        text-transform: uppercase;
-        color: var(--s-text-helper);
-        background: var(--s-layer-01);
+
+      /* ---------- collapsible item ---------- */
+      .sidenav details + details {
+        margin-top: var(--p-space-01);
+      }
+      .sidenav summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: var(--p-space-02);
+        padding: var(--p-space-02) var(--p-space-03);
         border-radius: var(--c-radius);
-        padding: 1px var(--p-space-02);
+        color: var(--s-text-primary);
+      }
+      .sidenav summary::-webkit-details-marker {
+        display: none;
+      }
+      /* Chevron leads the label, as drawn. */
+      .sidenav summary::before {
+        content: '';
+        width: 0.4rem;
+        height: 0.4rem;
+        flex: none;
+        margin-right: var(--p-space-01);
+        border-right: 1.5px solid var(--s-text-helper);
+        border-bottom: 1.5px solid var(--s-text-helper);
+        transform: rotate(45deg) translate(-1px, -1px);
+      }
+      .sidenav details[open] > summary::before {
+        transform: rotate(-135deg) translate(-1px, -1px);
+      }
+      .sidenav summary:hover {
+        background: var(--s-hover-ui);
+      }
+      .sidenav details[open] > summary {
+        font-weight: 600;
+      }
+
+      .sidenav details.empty > summary {
+        color: var(--s-text-secondary);
       }
       .sidenav .note {
-        padding: var(--p-space-02) var(--p-space-04);
+        padding: var(--p-space-02) var(--p-space-03) var(--p-space-02) var(--p-space-06);
         color: var(--s-text-helper);
         font-size: 0.8125rem;
       }
