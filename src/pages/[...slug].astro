@@ -1,0 +1,80 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('research');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const title = entry.data.name ?? entry.data.title ?? entry.id;
+
+// Surface the evidence-quality signals rather than burying them in the prose.
+const meta = [
+  ['Status', entry.data.status],
+  ['Study', entry.data.study],
+  ['Type', entry.data.input_type],
+  ['Evidence quality', entry.data.evidence_quality],
+  ['Confidence', entry.data.confidence],
+  ['Source of truth', entry.data.ssot === false ? 'no — reference only' : undefined],
+].filter(([, v]) => v !== undefined);
+---
+
+<Base title={title} eyebrow={entry.data.id ?? 'Research'}>
+  {
+    meta.length > 0 && (
+      <dl class="meta">
+        {meta.map(([k, v]) => (
+          <div>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+
+  <article>
+    <Content />
+  </article>
+
+  <p class="source">
+    Source: <code>product-context/research/{entry.id}.md</code>
+  </p>
+
+  <style>
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-space-inline);
+      border: 1px solid var(--s-border);
+      padding: var(--s-space-inline);
+      margin: 0 0 var(--s-space-block);
+    }
+    .meta div {
+      margin: 0;
+    }
+    .meta dt {
+      font-family: var(--s-font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--s-text-muted);
+    }
+    .meta dd {
+      margin: 0;
+      font-size: 0.9375rem;
+    }
+    .source {
+      font-family: var(--s-font-mono);
+      font-size: 0.8125rem;
+      color: var(--s-text-muted);
+    }
+  </style>
+</Base>

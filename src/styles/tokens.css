@@ -1,0 +1,91 @@
+/**
+ * Placeholder token layer.
+ *
+ * These are PLACEHOLDERS for the site shell only. They are NOT the SCB design
+ * language system tokens, and nothing here should be treated as a design
+ * decision. When the real token pipeline lands, this file is replaced by the
+ * generated token output and never hand-edited again. See ADR-1.
+ *
+ * Structure follows the three-tier model so the replacement is a swap, not a
+ * rewrite: primitive -> semantic -> component.
+ */
+
+:root {
+  /* --- tier 1: primitives --- */
+  --p-white: #ffffff;
+  --p-grey-10: #f4f4f4;
+  --p-grey-20: #e0e0e0;
+  --p-grey-60: #6f6f6f;
+  --p-grey-90: #262626;
+  --p-grey-100: #161616;
+  --p-purple-60: #4100bf;
+  --p-purple-40: #9578f2;
+
+  --p-size-1: 0.25rem;
+  --p-size-2: 0.5rem;
+  --p-size-3: 1rem;
+  --p-size-4: 1.5rem;
+  --p-size-5: 2rem;
+  --p-size-6: 3rem;
+
+  /* --- tier 2: semantic --- */
+  --s-background: var(--p-white);
+  --s-surface: var(--p-grey-10);
+  --s-border: var(--p-grey-20);
+  --s-text: var(--p-grey-100);
+  --s-text-muted: var(--p-grey-60);
+  --s-accent: var(--p-purple-60);
+  --s-accent-text: var(--p-white);
+
+  --s-space-inline: var(--p-size-3);
+  --s-space-block: var(--p-size-4);
+
+  /* Latin and Thai must both be served. IBM Plex covers Thai as IBM Plex Sans Thai. */
+  --s-font-sans: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --s-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --s-background: var(--p-grey-100);
+    --s-surface: var(--p-grey-90);
+    --s-border: var(--p-grey-60);
+    --s-text: var(--p-grey-10);
+    --s-text-muted: var(--p-grey-20);
+    --s-accent: var(--p-purple-40);
+    --s-accent-text: var(--p-grey-100);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--s-background);
+  color: var(--s-text);
+  font-family: var(--s-font-sans);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--s-accent);
+}
+
+/* Accessibility floor: a visible focus ring is non-negotiable. */
+:focus-visible {
+  outline: 2px solid var(--s-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

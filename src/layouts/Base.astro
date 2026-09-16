@@ -1,0 +1,123 @@
+---
+import '../styles/tokens.css';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+}
+
+const { title, eyebrow } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · SCBX reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a href="#main" class="skip">Skip to content</a>
+
+    <header>
+      <div class="wrap">
+        <p class="eyebrow">SCBX · internal reference</p>
+        <nav aria-label="Primary">
+          <a href="/">Overview</a>
+          <a href="/#research">Research</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+      <h1>{title}</h1>
+      <slot />
+    </main>
+
+    <footer class="wrap">
+      <p>
+        Generated from <code>product-context/</code> at build time. Nothing here is
+        hand-maintained — edit the markdown, not the site. See ADR-1.
+      </p>
+    </footer>
+
+    <style>
+      .wrap {
+        max-width: 72ch;
+        margin: 0 auto;
+        padding: 0 var(--s-space-inline);
+      }
+      .skip {
+        position: absolute;
+        left: -9999px;
+      }
+      .skip:focus {
+        left: var(--s-space-inline);
+        top: var(--s-space-inline);
+        background: var(--s-accent);
+        color: var(--s-accent-text);
+        padding: var(--p-size-2);
+        z-index: 10;
+      }
+      header {
+        border-bottom: 1px solid var(--s-border);
+        padding: var(--s-space-inline) 0;
+        margin-bottom: var(--s-space-block);
+      }
+      header .wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: var(--s-space-inline);
+        flex-wrap: wrap;
+      }
+      nav a {
+        margin-left: var(--s-space-inline);
+      }
+      .eyebrow {
+        font-family: var(--s-font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--s-text-muted);
+        margin: 0;
+      }
+      footer {
+        border-top: 1px solid var(--s-border);
+        margin-top: var(--s-space-block);
+        padding: var(--s-space-inline) 0;
+        color: var(--s-text-muted);
+        font-size: 0.875rem;
+      }
+      main :global(table) {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9375rem;
+      }
+      main :global(th),
+      main :global(td) {
+        border: 1px solid var(--s-border);
+        padding: var(--p-size-2);
+        text-align: left;
+      }
+      main :global(code) {
+        font-family: var(--s-font-mono);
+        background: var(--s-surface);
+        padding: 0.1em 0.3em;
+      }
+      main :global(blockquote) {
+        border-left: 3px solid var(--s-accent);
+        margin-left: 0;
+        padding-left: var(--s-space-inline);
+        color: var(--s-text-muted);
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "scbx-reference-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal reference site — generated from product-context. Never hand-maintained.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "yaml": "^2.9.1"
+  }
+}
