@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import CompetitorGrid from '../components/CompetitorGrid.astro';
 
 export async function getStaticPaths() {
   const entries = await getCollection('research');
@@ -37,6 +38,17 @@ const meta = [
           </div>
         ))}
       </dl>
+    )
+  }
+
+  {/* The artefact declares which visual it needs; the site supplies it.
+      Keeps the markdown free of component markup and site-specific paths. */}
+  {
+    entry.data.visual === 'competitor-grid' && (
+      <section>
+        <h2 id="the-apps">The apps</h2>
+        <CompetitorGrid />
+      </section>
     )
   }
 

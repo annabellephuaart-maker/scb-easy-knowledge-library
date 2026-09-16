@@ -1,0 +1,231 @@
+---
+import { competitorApps } from '../data/competitor-apps';
+---
+
+<div class="controls">
+  <span id="csort-label">Sort by</span>
+  <div class="seg" role="group" aria-labelledby="csort-label">
+    <button type="button" data-csort="rating" aria-pressed="true">Rating</button>
+    <button type="button" data-csort="ratings" aria-pressed="false">Ratings count</button>
+  </div>
+</div>
+
+<ul class="apps" data-competitor-grid>
+  {
+    competitorApps.map((app) => (
+      <li
+        class:list={['app', { us: app.isUs }]}
+        data-rating={app.rating}
+        data-ratings={app.ratingCount}
+      >
+        {app.shots[0] && (
+          <figure class="shot">
+            <img
+              src={app.shots[0]}
+              alt={`${app.name} — App Store screenshot`}
+              loading="lazy"
+              width="420"
+              height="525"
+            />
+          </figure>
+        )}
+
+        <div class="txt">
+          <p class="app-name">
+            <img class="ico" src={app.icon} alt="" width="24" height="24" loading="lazy" />
+            {app.name}
+            {app.isUs && <span class="us-tag">us</span>}
+          </p>
+          <p class="app-seller">{app.seller}</p>
+        </div>
+
+        <dl class="app-meta">
+          <div>
+            <dt>Rating</dt>
+            <dd>{app.rating.toFixed(2)}★</dd>
+          </div>
+          <div>
+            <dt>Ratings</dt>
+            <dd>{app.ratingCount.toLocaleString('en-GB')}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{app.updated}</dd>
+          </div>
+        </dl>
+
+        <p class="app-link">
+          <a href={app.storeUrl} rel="noreferrer">View on the App Store</a>
+        </p>
+      </li>
+    ))
+  }
+</ul>
+
+<p class="src">
+  Screenshots and figures from the Apple App Store, Thailand storefront, retrieved
+  2026-09-17 via the public iTunes Lookup API. iOS only — Google Play ratings are not
+  comparable.
+</p>
+
+<script>
+  const grid = document.querySelector<HTMLElement>('[data-competitor-grid]');
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-csort]')];
+  if (grid && buttons.length) {
+    const items = [...grid.children] as HTMLElement[];
+    const sort = (key: string) => {
+      const get = (el: HTMLElement) => Number(el.dataset[key] ?? 0);
+      [...items].sort((a, b) => get(b) - get(a)).forEach((el) => grid.appendChild(el));
+      buttons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.csort === key))
+      );
+    };
+    buttons.forEach((b) => b.addEventListener('click', () => sort(b.dataset.csort ?? '')));
+    sort('rating');
+  }
+</script>
+
+<style>
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-03);
+    margin: var(--p-space-04) 0 var(--p-space-05);
+    font-size: 0.8125rem;
+    color: var(--s-text-secondary);
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    background: var(--s-background);
+  }
+  .seg button {
+    font: inherit;
+    padding: var(--p-space-02) var(--p-space-04);
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--s-border-subtle);
+    color: var(--s-text-secondary);
+    cursor: pointer;
+  }
+  .seg button:last-child {
+    border-right: 0;
+  }
+  .seg button:hover {
+    background: var(--s-hover-ui);
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--s-selected-ui);
+    color: var(--s-brand-strong);
+    font-weight: 600;
+  }
+
+  .apps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--p-space-04);
+  }
+  .app {
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  /* The product under overhaul, marked so it is findable in the row. */
+  .app.us {
+    border-color: var(--s-brand);
+    box-shadow: inset 0 0 0 1px var(--s-brand);
+  }
+  .shot {
+    margin: 0;
+    background: var(--s-layer-01);
+    border-bottom: 1px solid var(--s-border-subtle);
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  .txt {
+    padding: var(--p-space-04) var(--p-space-04) var(--p-space-03);
+  }
+  .app-name {
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-02);
+  }
+  .ico {
+    border-radius: 5px;
+    flex: none;
+  }
+  .us-tag {
+    font-family: var(--s-font-mono);
+    font-size: 0.5625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--s-text-on-color);
+    background: var(--s-brand);
+    border-radius: var(--c-radius);
+    padding: 1px var(--p-space-02);
+  }
+  .app-seller {
+    margin: var(--p-space-01) 0 0;
+    font-size: 0.75rem;
+    color: var(--s-text-secondary);
+  }
+  .app-meta {
+    display: flex;
+    gap: var(--p-space-04);
+    margin: auto 0 0;
+    padding: var(--p-space-03) var(--p-space-04);
+    border-top: 1px solid var(--s-border-subtle);
+  }
+  .app-meta div {
+    margin: 0;
+  }
+  .app-meta dt {
+    font-family: var(--s-font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--s-text-helper);
+  }
+  .app-meta dd {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .app-link {
+    margin: 0;
+    padding: 0 var(--p-space-04) var(--p-space-04);
+    font-size: 0.75rem;
+  }
+  .src {
+    margin-top: var(--p-space-04);
+    font-size: 0.75rem;
+    color: var(--s-text-helper);
+  }
+
+  @media (max-width: 68rem) {
+    .apps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 36rem) {
+    .apps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -23,6 +23,8 @@ const research = defineCollection({
       workstream: z.string().optional(),
       stream_order: z.number().optional(),
       page_order: z.number().optional(),
+      /** Names a component the page needs, supplied by the site. */
+      visual: z.string().optional(),
       superseded_by: z.array(z.string()).optional(),
       artefact_type: z.string().optional(),
       question: z.string().optional(),
