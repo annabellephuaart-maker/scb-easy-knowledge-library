@@ -7,12 +7,18 @@ const studies = entries.filter((e) => e.id.endsWith('study-objective'));
 const inputs = entries.filter((e) => !e.id.endsWith('study-objective'));
 ---
 
-<Base title="SCBX internal reference" eyebrow="Overview">
+<Base
+  title="What is this?"
+  eyebrow="All about this system"
+  intro="An internal reference for the SCB Easy overhaul. It renders the project's research artefacts straight from source, so it is never out of step with them."
+>
   <p>
-    A browsable view of the project's research artefacts. Content is read from
-    <code>product-context/</code> when the site builds, so this is never out of step with
-    the source.
+    Content is read from <code>product-context/</code> when the site builds. Nothing here is
+    typed twice, which is what stops the site drifting from the artefacts it describes. To
+    change a page, edit the markdown.
   </p>
+
+  <h2>What's here today</h2>
 
   <dl class="counts">
     <div><dt>Studies</dt><dd>{studies.length}</dd></div>
@@ -20,36 +26,39 @@ const inputs = entries.filter((e) => !e.id.endsWith('study-objective'));
     <div><dt>Artefacts</dt><dd>{entries.length}</dd></div>
   </dl>
 
-  <h2 id="research">Research</h2>
-  {
-    entries.length === 0 ? (
-      <p>No research artefacts found in <code>product-context/research/</code>.</p>
-    ) : (
-      <ul>
-        {entries.map((entry) => (
-          <li>
-            <a href={`/${entry.id}`}>{entry.data.name ?? entry.data.title ?? entry.id}</a>
-            {entry.data.status && <span class="tag">{entry.data.status}</span>}
-          </li>
-        ))}
-      </ul>
-    )
-  }
+  <ul class="list">
+    {
+      entries.map((entry) => (
+        <li>
+          <a href={`/${entry.id}`}>{entry.data.name ?? entry.data.title ?? entry.id}</a>
+          {entry.data.status && <span class="tag">{entry.data.status}</span>}
+        </li>
+      ))
+    }
+  </ul>
 
-  <h2>Design system</h2>
+  <h2>What isn't here yet</h2>
   <p>
-    Not yet. Component and token documentation lands in phase two, once tokens exist.
-    Building those pages before there are components to document would mean writing them
-    twice.
+    Design system documentation — elements, components, patterns, guidelines. Those sections
+    are listed in the navigation but empty on purpose. Writing component documentation before
+    there are components to document means writing it twice.
+  </p>
+
+  <h2>Reading the artefacts</h2>
+  <p>
+    Each research page carries a metadata strip: evidence quality, confidence, and whether it
+    is a source of truth. Read it before citing anything. Desk research cannot ground a user
+    need, and the artefacts say so where it applies.
   </p>
 
   <style>
     .counts {
       display: flex;
-      gap: var(--s-space-block);
-      border: 1px solid var(--s-border);
-      padding: var(--s-space-inline);
-      margin: var(--s-space-block) 0;
+      gap: var(--p-spacing-07);
+      border-top: 1px solid var(--s-border-subtle);
+      border-bottom: 1px solid var(--s-border-subtle);
+      padding: var(--p-spacing-05) 0;
+      margin: var(--p-spacing-05) 0 var(--p-spacing-07);
     }
     .counts div {
       margin: 0;
@@ -57,22 +66,37 @@ const inputs = entries.filter((e) => !e.id.endsWith('study-objective'));
     .counts dt {
       font-family: var(--s-font-mono);
       font-size: 0.6875rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--s-text-muted);
+      color: var(--s-text-helper);
     }
     .counts dd {
+      margin: var(--p-spacing-02) 0 0;
+      font-size: 1.75rem;
+      font-weight: 400;
+    }
+    .list {
+      list-style: none;
+      padding: 0;
       margin: 0;
-      font-family: var(--s-font-mono);
-      font-size: 1.5rem;
+      border-top: 1px solid var(--s-border-subtle);
+    }
+    .list li {
+      border-bottom: 1px solid var(--s-border-subtle);
+      padding: var(--p-spacing-05) 0;
+      display: flex;
+      align-items: baseline;
+      gap: var(--p-spacing-05);
     }
     .tag {
+      margin-left: auto;
       font-family: var(--s-font-mono);
-      font-size: 0.6875rem;
-      text-transform: uppercase;
+      font-size: 0.625rem;
       letter-spacing: 0.08em;
-      color: var(--s-text-muted);
-      margin-left: var(--p-size-2);
+      text-transform: uppercase;
+      color: var(--s-text-helper);
+      border: 1px solid var(--s-border-subtle);
+      padding: 0 var(--p-spacing-02);
     }
   </style>
 </Base>

@@ -1,12 +1,40 @@
 ---
 import '../styles/tokens.css';
+import { getCollection } from 'astro:content';
 
 interface Props {
   title: string;
   eyebrow?: string;
+  /** Rendered under the hero title. */
+  intro?: string;
 }
 
-const { title, eyebrow } = Astro.props;
+const { title, eyebrow, intro } = Astro.props;
+const here = Astro.url.pathname.replace(/\/$/, '');
+
+const entries = await getCollection('research');
+
+// Group research artefacts by the study directory they live in.
+const studies = new Map<string, { label: string; items: typeof entries }>();
+for (const entry of entries) {
+  const [dir] = entry.id.split('/').slice(1, 2);
+  const key = dir ?? 'unfiled';
+  if (!studies.has(key)) {
+    studies.set(key, { label: key.replace(/_/g, ' · '), items: [] });
+  }
+  studies.get(key)!.items.push(entry);
+}
+
+// Phase two. Listed so the shape of the system is visible, marked as absent
+// rather than linked to pages that do not exist.
+const deferred = [
+  'Designing',
+  'Developing',
+  'Elements',
+  'Components',
+  'Patterns',
+  'Guidelines',
+];
 ---
 
 <!doctype html>
@@ -14,109 +42,324 @@ const { title, eyebrow } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title} · SCBX reference</title>
+    <title>{title} · SCBX Design Reference</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <a href="#main" class="skip">Skip to content</a>
+    <a href="#main" class="skip">Skip to main content</a>
 
-    <header>
-      <div class="wrap">
-        <p class="eyebrow">SCBX · internal reference</p>
-        <nav aria-label="Primary">
-          <a href="/">Overview</a>
-          <a href="/#research">Research</a>
-        </nav>
-      </div>
+    <header class="hdr">
+      <a class="hdr-name" href="/">
+        <span class="hdr-prefix">SCBX</span> Design Reference
+      </a>
     </header>
 
-    <main id="main" class="wrap">
-      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
-      <h1>{title}</h1>
-      <slot />
-    </main>
+    <div class="shell">
+      <nav class="sidenav" aria-label="Primary">
+        <details open>
+          <summary>All about this system</summary>
+          <ul>
+            <li>
+              <a href="/" aria-current={here === '' ? 'page' : undefined}>What is this?</a>
+            </li>
+          </ul>
+        </details>
 
-    <footer class="wrap">
-      <p>
-        Generated from <code>product-context/</code> at build time. Nothing here is
-        hand-maintained — edit the markdown, not the site. See ADR-1.
-      </p>
-    </footer>
+        <details open>
+          <summary>Research</summary>
+          {
+            [...studies.values()].map((study) => (
+              <>
+                <p class="group">{study.label}</p>
+                <ul>
+                  {study.items.map((item) => (
+                    <li>
+                      <a
+                        href={`/${item.id}`}
+                        aria-current={here === `/${item.id}` ? 'page' : undefined}
+                      >
+                        {item.data.name ?? item.data.title ?? item.id}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ))
+          }
+        </details>
+
+        {
+          deferred.map((section) => (
+            <details class="empty">
+              <summary>
+                {section}
+                <span class="badge">phase 2</span>
+              </summary>
+              <ul>
+                <li class="note">Nothing here until tokens and components exist.</li>
+              </ul>
+            </details>
+          ))
+        }
+      </nav>
+
+      <div class="body">
+        <div class="hero">
+          {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+          <h1>{title}</h1>
+        </div>
+
+        <main id="main" class="content">
+          {intro && <p class="intro">{intro}</p>}
+          <slot />
+        </main>
+
+        <footer class="content foot">
+          <p>
+            Generated from <code>product-context/</code> at build time. Nothing here is
+            hand-maintained — edit the markdown, not the site. See ADR-1.
+          </p>
+        </footer>
+      </div>
+    </div>
 
     <style>
-      .wrap {
-        max-width: 72ch;
-        margin: 0 auto;
-        padding: 0 var(--s-space-inline);
-      }
       .skip {
         position: absolute;
         left: -9999px;
       }
       .skip:focus {
-        left: var(--s-space-inline);
-        top: var(--s-space-inline);
-        background: var(--s-accent);
-        color: var(--s-accent-text);
-        padding: var(--p-size-2);
-        z-index: 10;
+        left: 0;
+        top: 0;
+        z-index: 100;
+        background: var(--s-link-primary);
+        color: var(--s-text-on-color);
+        padding: var(--p-spacing-05);
       }
-      header {
-        border-bottom: 1px solid var(--s-border);
-        padding: var(--s-space-inline) 0;
-        margin-bottom: var(--s-space-block);
-      }
-      header .wrap {
+
+      /* ---------- Carbon UI shell header ---------- */
+      .hdr {
+        position: fixed;
+        inset: 0 0 auto 0;
+        height: var(--c-header-height);
+        background: var(--s-header-bg);
+        border-bottom: 1px solid var(--s-header-border);
         display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: var(--s-space-inline);
-        flex-wrap: wrap;
+        align-items: center;
+        z-index: 50;
       }
-      nav a {
-        margin-left: var(--s-space-inline);
+      .hdr-name {
+        color: var(--s-header-text);
+        font-size: 0.875rem;
+        letter-spacing: 0.16px;
+        padding: 0 var(--p-spacing-05);
+        line-height: var(--c-header-height);
+      }
+      .hdr-name:hover {
+        text-decoration: none;
+      }
+      .hdr-prefix {
+        font-weight: 600;
+      }
+
+      /* ---------- shell ---------- */
+      .shell {
+        display: grid;
+        grid-template-columns: var(--c-sidenav-width) minmax(0, 1fr);
+        padding-top: var(--c-header-height);
+      }
+
+      /* ---------- side navigation ---------- */
+      .sidenav {
+        position: sticky;
+        top: var(--c-header-height);
+        height: calc(100vh - var(--c-header-height));
+        overflow-y: auto;
+        background: var(--s-background);
+        border-right: 1px solid var(--s-border-subtle);
+        padding-bottom: var(--p-spacing-09);
+      }
+      .sidenav details {
+        border-bottom: 1px solid var(--s-border-subtle);
+      }
+      .sidenav summary {
+        cursor: pointer;
+        list-style: none;
+        padding: var(--p-spacing-05);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--p-spacing-03);
+      }
+      .sidenav summary::-webkit-details-marker {
+        display: none;
+      }
+      .sidenav summary::after {
+        content: '';
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 1px solid var(--s-text-primary);
+        border-bottom: 1px solid var(--s-text-primary);
+        transform: rotate(45deg) translate(-2px, -2px);
+        flex: none;
+      }
+      .sidenav details[open] > summary::after {
+        transform: rotate(-135deg) translate(-2px, -2px);
+      }
+      .sidenav summary:hover {
+        background: var(--s-hover-ui);
+      }
+      .sidenav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0 0 var(--p-spacing-03);
+      }
+      .sidenav li a {
+        display: block;
+        padding: var(--p-spacing-03) var(--p-spacing-05) var(--p-spacing-03)
+          var(--p-spacing-07);
+        color: var(--s-text-secondary);
+        border-left: 3px solid transparent;
+      }
+      .sidenav li a:hover {
+        background: var(--s-hover-ui);
+        color: var(--s-text-primary);
+        text-decoration: none;
+      }
+      .sidenav li a[aria-current='page'] {
+        background: var(--s-selected-ui);
+        color: var(--s-text-primary);
+        font-weight: 600;
+        border-left-color: var(--s-link-primary);
+      }
+      .sidenav .group {
+        margin: var(--p-spacing-03) 0 var(--p-spacing-02);
+        padding: 0 var(--p-spacing-05);
+        font-family: var(--s-font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--s-text-helper);
+      }
+      .sidenav details.empty > summary {
+        color: var(--s-text-helper);
+        font-weight: 400;
+      }
+      .sidenav .badge {
+        font-family: var(--s-font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--s-text-helper);
+        border: 1px solid var(--s-border-subtle);
+        padding: 0 var(--p-spacing-02);
+        margin-left: auto;
+      }
+      .sidenav .note {
+        padding: var(--p-spacing-03) var(--p-spacing-05) var(--p-spacing-03)
+          var(--p-spacing-07);
+        color: var(--s-text-helper);
+        font-size: 0.75rem;
+      }
+
+      /* ---------- hero, in Carbon's expressive style ---------- */
+      .hero {
+        background: var(--s-header-bg);
+        color: var(--s-text-on-color);
+        padding: var(--p-spacing-09) var(--p-spacing-07) var(--p-spacing-10);
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.375rem);
+        font-weight: 400;
+        line-height: 1.15;
+        letter-spacing: 0;
+        max-width: 20ch;
       }
       .eyebrow {
         font-family: var(--s-font-mono);
         font-size: 0.75rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--s-text-muted);
-        margin: 0;
+        color: var(--p-grey-30);
+        margin: 0 0 var(--p-spacing-05);
       }
-      footer {
-        border-top: 1px solid var(--s-border);
-        margin-top: var(--s-space-block);
-        padding: var(--s-space-inline) 0;
-        color: var(--s-text-muted);
-        font-size: 0.875rem;
+
+      /* ---------- content ---------- */
+      .content {
+        max-width: var(--c-content-max);
+        padding: var(--p-spacing-09) var(--p-spacing-07);
       }
-      main :global(table) {
+      .intro {
+        font-size: 1.25rem;
+        line-height: 1.4;
+        font-weight: 400;
+        margin-top: 0;
+      }
+      .content :global(h2) {
+        font-size: 1.75rem;
+        font-weight: 400;
+        line-height: 1.25;
+        margin: var(--p-spacing-09) 0 var(--p-spacing-05);
+      }
+      .content :global(h3) {
+        font-size: 1.25rem;
+        font-weight: 400;
+        margin: var(--p-spacing-07) 0 var(--p-spacing-03);
+      }
+      .content :global(table) {
         border-collapse: collapse;
         width: 100%;
-        font-size: 0.9375rem;
+        font-size: 0.875rem;
+        margin: var(--p-spacing-05) 0;
       }
-      main :global(th),
-      main :global(td) {
-        border: 1px solid var(--s-border);
-        padding: var(--p-size-2);
+      .content :global(th) {
+        background: var(--s-layer-01);
+        font-weight: 600;
+      }
+      .content :global(th),
+      .content :global(td) {
+        border-bottom: 1px solid var(--s-border-subtle);
+        padding: var(--p-spacing-04) var(--p-spacing-05);
         text-align: left;
+        vertical-align: top;
       }
-      main :global(code) {
+      .content :global(code) {
         font-family: var(--s-font-mono);
-        background: var(--s-surface);
+        background: var(--s-layer-01);
         padding: 0.1em 0.3em;
+        font-size: 0.8125rem;
       }
-      main :global(blockquote) {
-        border-left: 3px solid var(--s-accent);
+      .content :global(blockquote) {
+        border-left: 3px solid var(--s-border-strong);
         margin-left: 0;
-        padding-left: var(--s-space-inline);
-        color: var(--s-text-muted);
+        padding-left: var(--p-spacing-05);
+        color: var(--s-text-secondary);
+      }
+      .foot {
+        border-top: 1px solid var(--s-border-subtle);
+        padding-top: var(--p-spacing-05);
+        color: var(--s-text-helper);
+        font-size: 0.75rem;
+      }
+
+      /* ---------- narrow viewports ---------- */
+      @media (max-width: 42rem) {
+        .shell {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .sidenav {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--s-border-subtle);
+        }
       }
     </style>
   </body>

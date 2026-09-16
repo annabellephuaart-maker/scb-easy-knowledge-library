@@ -52,10 +52,10 @@ const meta = [
     .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--s-space-inline);
-      border: 1px solid var(--s-border);
-      padding: var(--s-space-inline);
-      margin: 0 0 var(--s-space-block);
+      gap: var(--p-spacing-07);
+      background: var(--s-layer-01);
+      padding: var(--p-spacing-05);
+      margin: 0 0 var(--p-spacing-07);
     }
     .meta div {
       margin: 0;
@@ -63,18 +63,19 @@ const meta = [
     .meta dt {
       font-family: var(--s-font-mono);
       font-size: 0.6875rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--s-text-muted);
+      color: var(--s-text-helper);
     }
     .meta dd {
-      margin: 0;
-      font-size: 0.9375rem;
+      margin: var(--p-spacing-02) 0 0;
+      font-size: 0.875rem;
     }
     .source {
+      margin-top: var(--p-spacing-09);
       font-family: var(--s-font-mono);
-      font-size: 0.8125rem;
-      color: var(--s-text-muted);
+      font-size: 0.75rem;
+      color: var(--s-text-helper);
     }
   </style>
 </Base>

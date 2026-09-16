@@ -1,60 +1,75 @@
 /**
- * Placeholder token layer.
+ * Placeholder token layer — site shell only.
  *
- * These are PLACEHOLDERS for the site shell only. They are NOT the SCB design
- * language system tokens, and nothing here should be treated as a design
- * decision. When the real token pipeline lands, this file is replaced by the
- * generated token output and never hand-edited again. See ADR-1.
+ * These are NOT the SCB design language system tokens and carry no design
+ * decision. Values mirror IBM Carbon's White theme so the shell reads as
+ * Carbon while the real system is being built. When the SCB token pipeline
+ * lands, this file is replaced by generated output and never hand-edited.
+ * See ADR-1.
  *
- * Structure follows the three-tier model so the replacement is a swap, not a
- * rewrite: primitive -> semantic -> component.
+ * Three tiers, so replacement is a swap rather than a rewrite:
+ *   tier 1 primitive -> tier 2 semantic -> tier 3 component
  */
 
 :root {
-  /* --- tier 1: primitives --- */
+  /* ---------- tier 1: primitives (Carbon grey + blue ramps) ---------- */
   --p-white: #ffffff;
   --p-grey-10: #f4f4f4;
   --p-grey-20: #e0e0e0;
+  --p-grey-30: #c6c6c6;
+  --p-grey-50: #8d8d8d;
   --p-grey-60: #6f6f6f;
+  --p-grey-70: #525252;
+  --p-grey-80: #393939;
   --p-grey-90: #262626;
   --p-grey-100: #161616;
-  --p-purple-60: #4100bf;
-  --p-purple-40: #9578f2;
 
-  --p-size-1: 0.25rem;
-  --p-size-2: 0.5rem;
-  --p-size-3: 1rem;
-  --p-size-4: 1.5rem;
-  --p-size-5: 2rem;
-  --p-size-6: 3rem;
+  --p-blue-60: #0f62fe;
+  --p-blue-70: #0043ce;
 
-  /* --- tier 2: semantic --- */
+  /* Carbon spacing scale */
+  --p-spacing-01: 0.125rem; /*  2px */
+  --p-spacing-02: 0.25rem; /*   4px */
+  --p-spacing-03: 0.5rem; /*    8px */
+  --p-spacing-04: 0.75rem; /*  12px */
+  --p-spacing-05: 1rem; /*     16px */
+  --p-spacing-06: 1.5rem; /*   24px */
+  --p-spacing-07: 2rem; /*     32px */
+  --p-spacing-08: 2.5rem; /*   40px */
+  --p-spacing-09: 3rem; /*     48px */
+  --p-spacing-10: 4rem; /*     64px */
+
+  /* ---------- tier 2: semantic ---------- */
   --s-background: var(--p-white);
-  --s-surface: var(--p-grey-10);
-  --s-border: var(--p-grey-20);
-  --s-text: var(--p-grey-100);
-  --s-text-muted: var(--p-grey-60);
-  --s-accent: var(--p-purple-60);
-  --s-accent-text: var(--p-white);
+  --s-layer-01: var(--p-grey-10);
+  --s-layer-02: var(--p-white);
+  --s-border-subtle: var(--p-grey-20);
+  --s-border-strong: var(--p-grey-50);
 
-  --s-space-inline: var(--p-size-3);
-  --s-space-block: var(--p-size-4);
+  --s-text-primary: var(--p-grey-100);
+  --s-text-secondary: var(--p-grey-70);
+  --s-text-helper: var(--p-grey-60);
+  --s-text-on-color: var(--p-white);
 
-  /* Latin and Thai must both be served. IBM Plex covers Thai as IBM Plex Sans Thai. */
+  --s-link-primary: var(--p-blue-60);
+  --s-link-primary-hover: var(--p-blue-70);
+  --s-focus: var(--p-blue-60);
+
+  --s-header-bg: var(--p-grey-100);
+  --s-header-border: var(--p-grey-80);
+  --s-header-text: var(--p-grey-10);
+
+  --s-hover-ui: rgba(141, 141, 141, 0.16);
+  --s-selected-ui: var(--p-grey-20);
+
+  /* Latin and Thai must both be served. */
   --s-font-sans: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
   --s-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --s-background: var(--p-grey-100);
-    --s-surface: var(--p-grey-90);
-    --s-border: var(--p-grey-60);
-    --s-text: var(--p-grey-10);
-    --s-text-muted: var(--p-grey-20);
-    --s-accent: var(--p-purple-40);
-    --s-accent-text: var(--p-grey-100);
-  }
+  /* ---------- tier 3: component ---------- */
+  --c-header-height: 3rem; /* 48px — Carbon UI shell */
+  --c-sidenav-width: 16rem; /* 256px */
+  --c-content-max: 40rem;
 }
 
 *,
@@ -63,22 +78,35 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-padding-top: calc(var(--c-header-height) + var(--p-spacing-05));
+}
+
 body {
   margin: 0;
   background: var(--s-background);
-  color: var(--s-text);
+  color: var(--s-text-primary);
   font-family: var(--s-font-sans);
-  line-height: 1.6;
+  font-size: 0.875rem; /* Carbon body-01 */
+  line-height: 1.43;
+  letter-spacing: 0.16px;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Carbon is square. No border radius anywhere. */
 a {
-  color: var(--s-accent);
+  color: var(--s-link-primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--s-link-primary-hover);
+  text-decoration: underline;
 }
 
 /* Accessibility floor: a visible focus ring is non-negotiable. */
 :focus-visible {
-  outline: 2px solid var(--s-accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--s-focus);
+  outline-offset: -2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
