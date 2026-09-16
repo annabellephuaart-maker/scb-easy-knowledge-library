@@ -25,6 +25,11 @@ const research = defineCollection({
       page_order: z.number().optional(),
       /** Names a component the page needs, supplied by the site. */
       visual: z.string().optional(),
+      /** Marks a page as a group heading in the audit nav. */
+      audit_group: z.string().optional(),
+      /** Names the audit_group this page nests under. */
+      audit_parent: z.string().optional(),
+      superseded_by: z.array(z.string()).optional(),
       superseded_by: z.array(z.string()).optional(),
       artefact_type: z.string().optional(),
       question: z.string().optional(),

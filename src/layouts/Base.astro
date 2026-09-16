@@ -26,15 +26,25 @@ const streamScopes = entries
 const streams = streamScopes.map((scope) => ({
   scope,
   label: scope.data.name ?? scope.data.workstream ?? scope.id,
-  evidence: entries
-    .filter(
-      (e) =>
-        e.data.artefact_type !== 'stream-scope' &&
-        e.data.workstream === scope.data.workstream
-    )
-    // Order comes from the artefacts, so the research controls the reading
-    // order. Retired pages carry a high page_order and sink to the bottom.
-    .sort((a, b) => (a.data.page_order ?? 50) - (b.data.page_order ?? 50)),
+  // Two levels: pages, and pages nested under a group page. Membership and
+  // order both come from the artefacts, so the research owns the structure.
+  evidence: (() => {
+    const all = entries
+      .filter(
+        (e) =>
+          e.data.artefact_type !== 'stream-scope' &&
+          e.data.workstream === scope.data.workstream
+      )
+      .sort((a, b) => (a.data.page_order ?? 50) - (b.data.page_order ?? 50));
+    return all
+      .filter((e) => !e.data.audit_parent)
+      .map((e) => ({
+        entry: e,
+        children: e.data.audit_group
+          ? all.filter((c) => c.data.audit_parent === e.data.audit_group)
+          : [],
+      }));
+  })(),
 }));
 
 // Study-level artefacts, and anything not yet filed to a stream.
@@ -108,16 +118,32 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
                       Plan Overview
                     </a>
                   </li>
-                  {evidence.map((item) => (
-                    <li>
-                      <a
-                        href={`/${item.id}`}
-                        class={item.data.status === 'retired' ? 'retired' : undefined}
-                        aria-current={here === `/${item.id}` ? 'page' : undefined}
-                      >
-                        {item.data.name ?? item.data.title ?? item.id}
-                      </a>
-                    </li>
+                  {evidence.map(({ entry: item, children }) => (
+                    <>
+                      <li>
+                        <a
+                          href={`/${item.id}`}
+                          class={item.data.status === 'retired' ? 'retired' : undefined}
+                          aria-current={here === `/${item.id}` ? 'page' : undefined}
+                        >
+                          {item.data.name ?? item.data.title ?? item.id}
+                        </a>
+                      </li>
+                      {children.map((child) => (
+                        <li>
+                          <a
+                            class:list={[
+                              'child',
+                              { retired: child.data.status === 'retired' },
+                            ]}
+                            href={`/${child.id}`}
+                            aria-current={here === `/${child.id}` ? 'page' : undefined}
+                          >
+                            {child.data.name ?? child.data.title ?? child.id}
+                          </a>
+                        </li>
+                      ))}
+                    </>
                   ))}
                 </ul>
               </div>
@@ -339,6 +365,10 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         padding-left: var(--p-space-06);
       }
 
+      .sidenav li a.child {
+        padding-left: var(--p-space-07);
+        font-size: 0.8125rem;
+      }
       .sidenav li a.retired {
         color: var(--s-text-helper);
         text-decoration: line-through;
