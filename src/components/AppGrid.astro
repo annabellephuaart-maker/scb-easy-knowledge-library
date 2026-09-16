@@ -1,0 +1,222 @@
+---
+import { sisterApps, PILLARS } from '../data/sister-apps';
+import { appScreens } from '../data/app-screens';
+
+// Numeric install order, so "most downloads" sorts correctly rather than
+// alphabetically on the display string.
+const installRank: Record<string, number> = {
+  '10M+': 10_000_000,
+  '5M+': 5_000_000,
+  '1M+': 1_000_000,
+  '500K+': 500_000,
+  '100K+': 100_000,
+  '10K+': 10_000,
+};
+
+const apps = sisterApps.map((app) => ({
+  ...app,
+  cover: appScreens[app.slug]?.screens[0],
+  totalScreens: appScreens[app.slug]?.total ?? app.screens,
+  installs_n: installRank[app.installs] ?? 0,
+  pillar_n: PILLARS.indexOf(app.pillar as (typeof PILLARS)[number]),
+}));
+---
+
+<div class="controls">
+  <span id="sort-label">Sort by</span>
+  <div class="seg" role="group" aria-labelledby="sort-label">
+    <button type="button" data-sort="installs" aria-pressed="true">Most downloads</button>
+    <button type="button" data-sort="rating" aria-pressed="false">Highest rating</button>
+    <button type="button" data-sort="pillar" aria-pressed="false">Category</button>
+  </div>
+</div>
+
+<ul class="apps" data-app-grid>
+  {
+    apps.map((app) => (
+      <li
+        class="app"
+        data-installs={app.installs_n}
+        data-rating={app.rating}
+        data-pillar={app.pillar_n}
+      >
+        {app.cover && (
+          <figure class="shot">
+            <img
+              src={app.cover.src}
+              alt={`${app.name} — ${app.cover.alt}`}
+              loading="lazy"
+              width="520"
+              height="650"
+            />
+          </figure>
+        )}
+        <div class="txt">
+          <p class="app-name">{app.name}</p>
+          <p class="app-domain">{app.domain}</p>
+          <p class="app-pillar">{app.pillar}</p>
+        </div>
+        <dl class="app-meta">
+          <div>
+            <dt>Installs</dt>
+            <dd>{app.installs}</dd>
+          </div>
+          <div>
+            <dt>Rating</dt>
+            <dd class={app.rating < 4 ? 'low' : undefined}>{app.rating.toFixed(1)}★</dd>
+          </div>
+          <div>
+            <dt>Screens</dt>
+            <dd>{app.totalScreens}</dd>
+          </div>
+        </dl>
+      </li>
+    ))
+  }
+</ul>
+
+<script>
+  const grid = document.querySelector<HTMLElement>('[data-app-grid]');
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-sort]')];
+  if (grid && buttons.length) {
+    const items = [...grid.children] as HTMLElement[];
+
+    const sort = (key: string) => {
+      const get = (el: HTMLElement) => Number(el.dataset[key] ?? 0);
+      // Category sorts ascending to keep pillar order; the rest descending.
+      const ordered = [...items].sort((a, b) =>
+        key === 'pillar' ? get(a) - get(b) : get(b) - get(a)
+      );
+      ordered.forEach((el) => grid.appendChild(el));
+      buttons.forEach((b) =>
+        b.setAttribute('aria-pressed', b.dataset.sort === key ? 'true' : 'false')
+      );
+    };
+
+    buttons.forEach((b) => b.addEventListener('click', () => sort(b.dataset.sort ?? '')));
+    sort('installs');
+  }
+</script>
+
+<style>
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-03);
+    margin: var(--p-space-04) 0 var(--p-space-05);
+    font-size: 0.8125rem;
+    color: var(--s-text-secondary);
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+  .seg button {
+    font: inherit;
+    padding: var(--p-space-02) var(--p-space-04);
+    background: var(--s-background);
+    border: 0;
+    border-right: 1px solid var(--s-border-subtle);
+    color: var(--s-text-secondary);
+    cursor: pointer;
+  }
+  .seg button:last-child {
+    border-right: 0;
+  }
+  .seg button:hover {
+    background: var(--s-hover-ui);
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--s-selected-ui);
+    color: var(--s-brand-strong);
+    font-weight: 600;
+  }
+
+  .apps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--p-space-04);
+  }
+  .app {
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .shot {
+    margin: 0;
+    background: var(--s-layer-01);
+    border-bottom: 1px solid var(--s-border-subtle);
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  .txt {
+    padding: var(--p-space-04) var(--p-space-04) var(--p-space-03);
+  }
+  .app-name {
+    margin: 0;
+    font-weight: 600;
+  }
+  .app-domain {
+    margin: var(--p-space-01) 0 0;
+    font-size: 0.8125rem;
+    color: var(--s-text-secondary);
+  }
+  .app-pillar {
+    margin: var(--p-space-02) 0 0;
+    font-family: var(--s-font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--s-text-helper);
+  }
+  .app-meta {
+    display: flex;
+    gap: var(--p-space-04);
+    margin: auto 0 0;
+    padding: var(--p-space-03) var(--p-space-04) var(--p-space-04);
+    border-top: 1px solid var(--s-border-subtle);
+  }
+  .app-meta div {
+    margin: 0;
+  }
+  .app-meta dt {
+    font-family: var(--s-font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--s-text-helper);
+  }
+  .app-meta dd {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .app-meta dd.low {
+    color: var(--s-brand);
+  }
+
+  @media (max-width: 68rem) {
+    .apps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 36rem) {
+    .apps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

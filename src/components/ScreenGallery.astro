@@ -1,0 +1,180 @@
+---
+import { appScreens } from '../data/app-screens';
+
+interface Props {
+  /** Key into appScreens. */
+  slug: string;
+  caption?: string;
+}
+
+const { slug, caption } = Astro.props;
+const app = appScreens[slug];
+const id = `gallery-${slug}`;
+---
+
+{
+  app && (
+    <figure class="gallery" id={id} data-gallery>
+      <div class="stage">
+        <img
+          src={app.screens[0].src}
+          alt={app.screens[0].alt}
+          data-stage
+          width="520"
+          height="1040"
+        />
+      </div>
+
+      <div class="side">
+        <p class="count">
+          <strong data-index>1</strong> of {app.screens.length}
+          {app.total > app.screens.length && (
+            <span class="of-total"> · {app.total} in the source inventory</span>
+          )}
+        </p>
+
+        {/* Thumbnails are real buttons: tab to them, arrow between them. */}
+        <div class="thumbs" role="tablist" aria-label={`${app.name} screens`}>
+          {app.screens.map((screen, i) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={id}
+              data-thumb
+              data-src={screen.src}
+              data-alt={screen.alt}
+              data-i={i}
+            >
+              <img src={screen.src} alt="" loading="lazy" width="120" height="240" />
+            </button>
+          ))}
+        </div>
+
+        <figcaption data-caption>{caption ?? app.screens[0].alt}</figcaption>
+      </div>
+    </figure>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((gallery) => {
+    const stage = gallery.querySelector<HTMLImageElement>('[data-stage]');
+    const caption = gallery.querySelector<HTMLElement>('[data-caption]');
+    const index = gallery.querySelector<HTMLElement>('[data-index]');
+    const thumbs = [...gallery.querySelectorAll<HTMLButtonElement>('[data-thumb]')];
+    if (!stage || !thumbs.length) return;
+
+    const show = (i: number, focus = false) => {
+      const thumb = thumbs[i];
+      if (!thumb) return;
+      stage.src = thumb.dataset.src ?? '';
+      stage.alt = thumb.dataset.alt ?? '';
+      if (caption) caption.textContent = thumb.dataset.alt ?? '';
+      if (index) index.textContent = String(i + 1);
+      thumbs.forEach((t, n) => {
+        t.setAttribute('aria-selected', n === i ? 'true' : 'false');
+        t.tabIndex = n === i ? 0 : -1;
+      });
+      if (focus) thumb.focus();
+    };
+
+    thumbs.forEach((thumb, i) => {
+      thumb.tabIndex = i === 0 ? 0 : -1;
+      thumb.addEventListener('click', () => show(i));
+    });
+
+    // Roving tabindex, per the WAI-ARIA tabs pattern.
+    gallery.addEventListener('keydown', (event) => {
+      const current = thumbs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      if (current === -1) return;
+      const last = thumbs.length - 1;
+      const key = (event as KeyboardEvent).key;
+      if (key === 'ArrowRight' || key === 'ArrowDown') show(Math.min(current + 1, last), true);
+      else if (key === 'ArrowLeft' || key === 'ArrowUp') show(Math.max(current - 1, 0), true);
+      else if (key === 'Home') show(0, true);
+      else if (key === 'End') show(last, true);
+      else return;
+      event.preventDefault();
+    });
+  });
+</script>
+
+<style>
+  .gallery {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: var(--p-space-05);
+    margin: var(--p-space-05) 0;
+    padding: var(--p-space-05);
+    background: var(--s-layer-01);
+    border-radius: var(--c-radius);
+  }
+  .stage {
+    background: var(--s-background);
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .stage img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-space-03);
+  }
+  .count {
+    margin: 0;
+    font-family: var(--s-font-mono);
+    font-size: 0.75rem;
+    color: var(--s-text-secondary);
+  }
+  .of-total {
+    color: var(--s-text-helper);
+  }
+  .thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    gap: var(--p-space-02);
+  }
+  .thumbs button {
+    padding: 0;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    background: var(--s-background);
+    cursor: pointer;
+    overflow: hidden;
+    aspect-ratio: 1 / 1.6;
+  }
+  .thumbs button:hover {
+    border-color: var(--s-brand-light);
+  }
+  .thumbs button[aria-selected='true'] {
+    border-color: var(--s-brand);
+    box-shadow: 0 0 0 2px var(--s-brand);
+  }
+  .thumbs img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  figcaption {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--s-text-secondary);
+  }
+
+  @media (max-width: 48rem) {
+    .gallery {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
