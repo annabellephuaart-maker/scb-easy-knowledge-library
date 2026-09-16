@@ -1,0 +1,397 @@
+---
+import { sisterApps } from '../data/sister-apps';
+import { appScreens } from '../data/app-screens';
+
+/**
+ * Store rating across the SCBX portfolio, plotted on a single axis.
+ *
+ * The ratings cluster hard: eight of nine sit between 3.9 and 4.8, so on a
+ * full 0–5 axis they overlap into a smudge. The scale toggle exists for that
+ * reason — 0–5 is the honest default because it does not exaggerate small
+ * differences, and the zoomed view is there when you need to read them apart.
+ */
+
+const points = sisterApps
+  .map((app) => ({
+    name: app.name,
+    rating: app.rating,
+    installs: app.installs,
+    cover: appScreens[app.slug]?.screens[0],
+  }))
+  .sort((a, b) => a.rating - b.rating);
+
+const scb = points.find((p) => p.name === 'SCB EASY');
+---
+
+<figure class="chart">
+  <figcaption>
+    <strong>Store rating across the SCBX portfolio.</strong> SCB EASY sits at {
+      scb?.rating.toFixed(1)
+    }★, below every sister app except SCBAM Fund Click. Rating is confounded by scope — a
+    single-purpose lending app is easier to satisfy than a full retail bank — so treat this
+    as a question to test, not a finding.
+  </figcaption>
+
+  <div class="controls">
+    <span id="scale-label">Scale</span>
+    <div class="seg" role="group" aria-labelledby="scale-label">
+      <button type="button" data-scale="0" aria-pressed="true">Full 0–5</button>
+      <button type="button" data-scale="2" aria-pressed="false">Zoom 2–5</button>
+      <button type="button" data-scale="3.5" aria-pressed="false">Zoom 3.5–5</button>
+    </div>
+  </div>
+
+  <div class="plot" data-plot data-min="0">
+    <div class="markers" data-markers>
+      {
+        points.map((p) => (
+          <div class="marker" data-rating={p.rating} data-name={p.name}>
+            <div class="card">
+              {p.cover && <img src={p.cover.src} alt="" loading="lazy" />}
+              <p class="lbl">
+                <span class="nm">{p.name}</span>
+                <span class="num">
+                  {p.rating.toFixed(1)}★ · {p.installs}
+                </span>
+              </p>
+            </div>
+            <span class="stem" />
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="axis" data-axis aria-hidden="true"></div>
+    <p class="offscale" data-offscale hidden></p>
+  </div>
+
+  <aside class="callout">
+    <p class="callout-title">Neither number settles which app is “best”</p>
+    <p>
+      Store ratings and install counts are <strong>directional signals, not a source of
+      truth</strong>. Read them as prompts for questions, never as a ranking.
+    </p>
+    <ul>
+      <li>
+        <strong>Ratings can be brigaded.</strong> One outage, fee change or policy decision
+        can pull a score down for months, and it says nothing about the interface.
+      </li>
+      <li>
+        <strong>Installs can be mandated.</strong> Apps distributed through employers,
+        partners, lenders or device preloads accumulate installs that were never a choice.
+        An install is not a user, and an active user is a different number again.
+      </li>
+      <li>
+        <strong>Scope is not held constant.</strong> A full retail bank has far more ways to
+        disappoint someone than a single-purpose lending app. Broader surface, lower ceiling.
+      </li>
+      <li>
+        <strong>Ratings are cumulative.</strong> On both stores a score carries years of
+        history, so a fixed problem keeps voting long after it was fixed.
+      </li>
+      <li>
+        <strong>Reviewers self-select.</strong> People rate when angry or when prompted at a
+        moment of success. Neither is the median user.
+      </li>
+    </ul>
+    <p>
+      What would settle it: SCB's own analytics, support tickets, and task-completion
+      testing. Until then this chart is a hypothesis generator.
+    </p>
+  </aside>
+
+  {/* A chart made of images is not readable on its own. */}
+  <details class="table">
+    <summary>View as table</summary>
+    <table>
+      <thead>
+        <tr><th>App</th><th>Rating</th><th>Installs</th></tr>
+      </thead>
+      <tbody>
+        {
+          [...points].reverse().map((p) => (
+            <tr>
+              <td>{p.name}</td>
+              <td>{p.rating.toFixed(1)}★</td>
+              <td>{p.installs}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</figure>
+
+<script>
+  const plot = document.querySelector<HTMLElement>('[data-plot]');
+  const axis = document.querySelector<HTMLElement>('[data-axis]');
+  const wrap = document.querySelector<HTMLElement>('[data-markers]');
+  if (plot && axis && wrap) {
+    const markers = [...wrap.querySelectorAll<HTMLElement>('.marker')];
+    const MAX = 5;
+
+    const layout = () => {
+      const min = Number(plot.dataset.min ?? 0);
+      const span = MAX - min;
+
+      // Ticks at whole numbers, plus the minimum when it is fractional.
+      const ticks: number[] = [];
+      for (let t = Math.ceil(min); t <= MAX; t += 1) ticks.push(t);
+      if (min % 1 !== 0) ticks.unshift(min);
+      axis.innerHTML = ticks
+        .map((t) => {
+          const left = ((t - min) / span) * 100;
+          return `<span class="tick" style="left:${left}%"><i></i><b>${
+            t % 1 === 0 ? t : t.toFixed(1)
+          }</b></span>`;
+        })
+        .join('');
+
+      // Greedy lane packing, so overlapping cards stack instead of colliding.
+      const cardWidth = markers[0]?.querySelector('.card')?.clientWidth ?? 90;
+      const gapPct = ((cardWidth + 8) / plot.clientWidth) * 100;
+      const laneEnds: number[] = [];
+
+      [...markers]
+        .sort((a, b) => Number(a.dataset.rating) - Number(b.dataset.rating))
+        .forEach((marker) => {
+          const rating = Number(marker.dataset.rating);
+          const pos = ((rating - min) / span) * 100;
+          const visible = rating >= min;
+          marker.hidden = !visible;
+          if (!visible) return;
+
+          let lane = laneEnds.findIndex((end) => pos - end >= gapPct);
+          if (lane === -1) lane = laneEnds.length;
+          laneEnds[lane] = pos;
+
+          marker.style.left = `${pos}%`;
+          marker.style.setProperty('--lane', String(lane));
+        });
+
+      wrap.style.setProperty('--lanes', String(Math.max(laneEnds.length, 1)));
+
+      // Never drop a data point silently — say what the zoom is hiding.
+      const hidden = markers.filter((m) => m.hidden);
+      const note = document.querySelector<HTMLElement>('[data-offscale]');
+      if (note) {
+        note.hidden = hidden.length === 0;
+        note.textContent = hidden.length
+          ? `Below this scale, not shown: ${hidden
+              .map((m) => `${m.dataset.name} (${m.dataset.rating}★)`)
+              .join(', ')}`
+          : '';
+      }
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-scale]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        plot.dataset.min = btn.dataset.scale ?? '0';
+        document
+          .querySelectorAll<HTMLButtonElement>('[data-scale]')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        layout();
+      });
+    });
+
+    layout();
+    window.addEventListener('resize', layout);
+  }
+</script>
+
+<style>
+  .chart {
+    margin: var(--p-space-05) 0;
+    padding: var(--p-space-05);
+    background: var(--s-layer-01);
+    border-radius: var(--c-radius);
+  }
+  figcaption {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--s-text-secondary);
+    max-width: 68ch;
+  }
+  figcaption strong {
+    color: var(--s-text-primary);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-03);
+    margin: var(--p-space-04) 0;
+    font-size: 0.8125rem;
+    color: var(--s-text-secondary);
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    background: var(--s-background);
+  }
+  .seg button {
+    font: inherit;
+    padding: var(--p-space-02) var(--p-space-04);
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--s-border-subtle);
+    color: var(--s-text-secondary);
+    cursor: pointer;
+  }
+  .seg button:last-child {
+    border-right: 0;
+  }
+  .seg button:hover {
+    background: var(--s-hover-ui);
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--s-selected-ui);
+    color: var(--s-brand-strong);
+    font-weight: 600;
+  }
+
+  .plot {
+    position: relative;
+    padding-top: var(--p-space-03);
+  }
+  .markers {
+    position: relative;
+    height: calc(var(--lanes, 1) * 8.75rem);
+    transition: height 0.2s ease;
+  }
+  .marker {
+    position: absolute;
+    bottom: calc(var(--lane, 0) * 8.75rem);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition:
+      left 0.25s ease,
+      bottom 0.25s ease;
+  }
+  .card {
+    width: 4.75rem;
+    background: var(--s-background);
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+  .card img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    border-bottom: 1px solid var(--s-border-subtle);
+  }
+  .lbl {
+    margin: 0;
+    padding: var(--p-space-02);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .nm {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .num {
+    font-family: var(--s-font-mono);
+    font-size: 0.625rem;
+    color: var(--s-text-secondary);
+  }
+  .stem {
+    width: 1px;
+    flex: 1;
+    min-height: var(--p-space-03);
+    background: var(--s-border-strong);
+  }
+
+  .axis {
+    position: relative;
+    height: 2.25rem;
+    border-top: 1px solid var(--s-text-secondary);
+  }
+  .axis :global(.tick) {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .axis :global(.tick i) {
+    display: block;
+    width: 1px;
+    height: 0.4rem;
+    margin: 0 auto;
+    background: var(--s-text-secondary);
+  }
+  .axis :global(.tick b) {
+    display: block;
+    font-family: var(--s-font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--s-text-secondary);
+    margin-top: var(--p-space-01);
+  }
+
+  .callout {
+    margin-top: var(--p-space-05);
+    padding: var(--p-space-04) var(--p-space-05);
+    background: var(--s-background);
+    border-left: 3px solid var(--s-accent);
+    border-radius: var(--c-radius);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--s-text-secondary);
+  }
+  .callout-title {
+    margin: 0 0 var(--p-space-02);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--s-text-primary);
+  }
+  .callout p {
+    margin: 0 0 var(--p-space-03);
+    max-width: 78ch;
+  }
+  .callout ul {
+    margin: 0 0 var(--p-space-03);
+    padding-left: var(--p-space-05);
+    max-width: 78ch;
+  }
+  .callout li {
+    margin-bottom: var(--p-space-02);
+  }
+  .callout strong {
+    color: var(--s-text-primary);
+  }
+  .offscale {
+    margin: var(--p-space-03) 0 0;
+    font-size: 0.75rem;
+    color: var(--s-text-helper);
+  }
+  .table {
+    margin-top: var(--p-space-04);
+    font-size: 0.8125rem;
+  }
+  .table summary {
+    cursor: pointer;
+    color: var(--s-link);
+  }
+  .table table {
+    width: auto;
+    margin-top: var(--p-space-03);
+    border-collapse: collapse;
+    background: var(--s-background);
+  }
+  .table th,
+  .table td {
+    border: 1px solid var(--s-border-subtle);
+    padding: var(--p-space-02) var(--p-space-04);
+    text-align: left;
+  }
+</style>

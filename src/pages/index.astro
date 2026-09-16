@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import ScreenGallery from '../components/ScreenGallery.astro';
 import AppGrid from '../components/AppGrid.astro';
+import RatingChart from '../components/RatingChart.astro';
 ---
 
 <Base
@@ -76,11 +77,7 @@ import AppGrid from '../components/AppGrid.astro';
 
   <AppGrid />
 
-  <blockquote>
-    SCB EASY rates 4.3★, below FINNIX, MoneyThunder and INVX at 4.8★ and POINTX at 4.7★.
-    Rating is confounded by scope — a single-purpose lending app is easier to satisfy than a
-    full retail bank — so treat this as a question to test, not a finding.
-  </blockquote>
+  <RatingChart />
 
   <p class="src">
     Portfolio data and screens come from the SCBX Screen Estate inventory. See <a
