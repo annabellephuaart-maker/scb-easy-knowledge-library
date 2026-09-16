@@ -1,102 +1,178 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { sisterApps, PILLARS } from '../data/sister-apps';
 
-const entries = await getCollection('research');
-const studies = entries.filter((e) => e.id.endsWith('study-objective'));
-const inputs = entries.filter((e) => !e.id.endsWith('study-objective'));
+const byPillar = PILLARS.map((pillar) => ({
+  pillar,
+  apps: sisterApps.filter((a) => a.pillar === pillar),
+}));
 ---
 
 <Base
-  title="What is this?"
-  eyebrow="All about this system"
-  intro="An internal reference for the SCB Easy overhaul. It renders the project's research artefacts straight from source, so it is never out of step with them."
+  title="Overview"
+  tab="Overview"
+  banner={true}
+  intro="An internal reference library for the SCB Easy overhaul. Research artefacts are rendered straight from source, so the library is never out of step with them."
 >
+  <h2 id="about-scb">About us</h2>
   <p>
-    Content is read from <code>product-context/</code> when the site builds. Nothing here is
-    typed twice, which is what stops the site drifting from the artefacts it describes. To
-    change a page, edit the markdown.
+    Siam Commercial Bank was established by royal charter on 30 January 1906 as the first
+    Thai bank. It operates today as a universal bank serving retail, SME and corporate
+    customers, with an international presence across Cambodia, China, Myanmar, Vietnam,
+    Singapore and Laos, and subsidiaries including SCB Securities and SCB Asset Management.
+  </p>
+  <p>
+    Retail services span home loans, personal credit, car hire purchase, cards, currency
+    exchange, remittances, investment and insurance. Corporate and SME services cover cash
+    management, lending, trade finance, treasury, capital markets and advisory.
+  </p>
+  <p>
+    The bank's stated strategic direction is <em>SCB Transformation</em>, which prioritises
+    digital channels, organisational agility, data analytics capability, and ecosystem links
+    between consumers and entrepreneurs.
+  </p>
+  <p class="src">
+    Summarised from <a href="https://www.scb.co.th/en/about-us.html">scb.co.th/en/about-us</a
+    >. That page is the source of truth; this is a précis and may lag it.
   </p>
 
-  <h2>What's here today</h2>
-
-  <dl class="counts">
-    <div><dt>Studies</dt><dd>{studies.length}</dd></div>
-    <div><dt>Inputs</dt><dd>{inputs.length}</dd></div>
-    <div><dt>Artefacts</dt><dd>{entries.length}</dd></div>
-  </dl>
-
-  <ul class="list">
-    {
-      entries.map((entry) => (
-        <li>
-          <a href={`/${entry.id}`}>{entry.data.name ?? entry.data.title ?? entry.id}</a>
-          {entry.data.status && <span class="tag">{entry.data.status}</span>}
-        </li>
-      ))
-    }
+  <h2 id="about-scb-easy">About SCB Easy</h2>
+  <p>
+    SCB Easy is the bank's retail mobile banking app and its primary consumer digital
+    channel. SCB retired its SCB Easy Net internet banking service, making the app the main
+    route for self-service retail banking.
+  </p>
+  <p>Its published feature set covers four areas:</p>
+  <ul>
+    <li>
+      <strong>Money movement</strong> — fee-free domestic transfers to any Thai bank, bill
+      payment by QR or provider, and top-ups for mobile credit, tolls, e-wallets and prepaid
+      cards.
+    </li>
+    <li>
+      <strong>Account access</strong> — account management, transaction history, and
+      cardless ATM withdrawal with no transaction fee.
+    </li>
+    <li>
+      <strong>Financial products</strong> — WEALTH4U investment advisory, EASY-D debenture
+      accounts, and the SCB Gold Marketplace.
+    </li>
+    <li>
+      <strong>Lifestyle and security</strong> — "Just for You" personalisation, "Easy Bonus"
+      offers, and Easy Security. Registration is by facial recognition, SCB ATM, or branch.
+    </li>
   </ul>
-
-  <h2>What isn't here yet</h2>
-  <p>
-    Design system documentation — elements, components, patterns, guidelines. Those sections
-    are listed in the navigation but empty on purpose. Writing component documentation before
-    there are components to document means writing it twice.
+  <p class="src">
+    Summarised from <a
+      href="https://www.scb.co.th/en/personal-banking/digital-banking/scb-easy.html"
+      >scb.co.th · SCB Easy</a
+    >.
   </p>
 
-  <h2>Reading the artefacts</h2>
+  <h2 id="sister-apps">Sister apps</h2>
   <p>
-    Each research page carries a metadata strip: evidence quality, confidence, and whether it
-    is a source of truth. Read it before citing anything. Desk research cannot ground a user
-    need, and the artefacts say so where it applies.
+    The nine consumer apps in the SCBX portfolio, across three business pillars. Install
+    counts and ratings are store-reported as at 16 September 2026 and move continuously.
+  </p>
+
+  {
+    byPillar.map(({ pillar, apps }) => (
+      <section class="pillar">
+        <h3>{pillar}</h3>
+        <ul class="apps">
+          {apps.map((app) => (
+            <li class="app">
+              <p class="app-name">{app.name}</p>
+              <p class="app-domain">{app.domain}</p>
+              <dl class="app-meta">
+                <div>
+                  <dt>Installs</dt>
+                  <dd>{app.installs}</dd>
+                </div>
+                <div>
+                  <dt>Rating</dt>
+                  <dd class={app.rating < 4 ? 'low' : undefined}>{app.rating.toFixed(1)}★</dd>
+                </div>
+                <div>
+                  <dt>Screens</dt>
+                  <dd>{app.screens}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <blockquote>
+    SCB EASY rates 4.3★, below FINNIX, MoneyThunder and INVX at 4.8★ and POINTX at 4.7★.
+    Rating is confounded by scope — a single-purpose lending app is easier to satisfy than a
+    full retail bank — so treat this as a question to test, not a finding.
+  </blockquote>
+
+  <p class="src">
+    Portfolio data transcribed from the SCBX Screen Estate inventory. See <a
+      href="/studies/STU-001_scb-easy-benchmark-desk-research/inputs/documents/scbx-screen-estate"
+      >the artefact</a
+    > for coverage limits — 110 of its 145 screens are storefront creatives rather than interface.
   </p>
 
   <style>
-    .counts {
-      display: flex;
-      gap: var(--p-spacing-07);
-      border-top: 1px solid var(--s-border-subtle);
-      border-bottom: 1px solid var(--s-border-subtle);
-      padding: var(--p-spacing-05) 0;
-      margin: var(--p-spacing-05) 0 var(--p-spacing-07);
-    }
-    .counts div {
-      margin: 0;
-    }
-    .counts dt {
-      font-family: var(--s-font-mono);
-      font-size: 0.6875rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    .src {
+      font-size: 0.8125rem;
       color: var(--s-text-helper);
     }
-    .counts dd {
-      margin: var(--p-spacing-02) 0 0;
-      font-size: 1.75rem;
-      font-weight: 400;
+    .pillar h3 {
+      padding-bottom: var(--p-space-02);
+      border-bottom: 1px solid var(--s-border-subtle);
     }
-    .list {
+    .apps {
       list-style: none;
+      margin: 0 0 var(--p-space-05);
       padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      gap: var(--p-space-04);
+    }
+    .app {
+      border: 1px solid var(--s-border-subtle);
+      border-radius: var(--c-radius);
+      padding: var(--p-space-04);
+    }
+    .app-name {
       margin: 0;
+      font-weight: 600;
+    }
+    .app-domain {
+      margin: var(--p-space-01) 0 var(--p-space-03);
+      font-size: 0.8125rem;
+      color: var(--s-text-secondary);
+    }
+    .app-meta {
+      display: flex;
+      gap: var(--p-space-04);
+      margin: 0;
+      padding-top: var(--p-space-03);
       border-top: 1px solid var(--s-border-subtle);
     }
-    .list li {
-      border-bottom: 1px solid var(--s-border-subtle);
-      padding: var(--p-spacing-05) 0;
-      display: flex;
-      align-items: baseline;
-      gap: var(--p-spacing-05);
+    .app-meta div {
+      margin: 0;
     }
-    .tag {
-      margin-left: auto;
+    .app-meta dt {
       font-family: var(--s-font-mono);
       font-size: 0.625rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--s-text-helper);
-      border: 1px solid var(--s-border-subtle);
-      padding: 0 var(--p-spacing-02);
+    }
+    .app-meta dd {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .app-meta dd.low {
+      color: var(--s-brand);
     }
   </style>
 </Base>

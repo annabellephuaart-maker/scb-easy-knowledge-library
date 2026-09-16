@@ -1,75 +1,83 @@
 /**
  * Placeholder token layer — site shell only.
  *
- * These are NOT the SCB design language system tokens and carry no design
- * decision. Values mirror IBM Carbon's White theme so the shell reads as
- * Carbon while the real system is being built. When the SCB token pipeline
- * lands, this file is replaced by generated output and never hand-edited.
+ * Values are SAMPLED from scb.co.th so the shell reads as SCB rather than as
+ * IBM Carbon. They are NOT the SCB design language system, they are not
+ * authoritative, and they carry no design decision. When the real token
+ * pipeline lands this file is generated output and is never hand-edited.
  * See ADR-1.
  *
  * Three tiers, so replacement is a swap rather than a rewrite:
  *   tier 1 primitive -> tier 2 semantic -> tier 3 component
+ *
+ * TYPEFACE CAVEAT
+ * SCB's brand typeface is Sukhumvit Tadmai (Cadson Demak). It is licensed and
+ * cannot be self-hosted here. The stack below falls back to IBM Plex Sans Thai
+ * — also Cadson Demak, similar humanist Thai construction — so proportions are
+ * close but not correct. Licensing the real face is an open item.
  */
 
 :root {
-  /* ---------- tier 1: primitives (Carbon grey + blue ramps) ---------- */
+  /* ---------- tier 1: primitives (sampled from scb.co.th) ---------- */
+  --p-purple-40: #7a58bf;
+  --p-purple-50: #745db9;
+  --p-purple-60: #5f489f;
+  --p-purple-80: #412775;
+  --p-purple-tint: #ebecf5;
+
+  --p-peach-50: #f6a969;
+
   --p-white: #ffffff;
-  --p-grey-10: #f4f4f4;
-  --p-grey-20: #e0e0e0;
-  --p-grey-30: #c6c6c6;
-  --p-grey-50: #8d8d8d;
-  --p-grey-60: #6f6f6f;
-  --p-grey-70: #525252;
-  --p-grey-80: #393939;
-  --p-grey-90: #262626;
-  --p-grey-100: #161616;
+  --p-grey-05: #f7f7f9;
+  --p-grey-20: #e6e6ea;
+  --p-grey-40: #bfbfbf;
+  --p-grey-60: #767676;
+  --p-grey-80: #333333;
+  --p-black: #000000;
 
-  --p-blue-60: #0f62fe;
-  --p-blue-70: #0043ce;
-
-  /* Carbon spacing scale */
-  --p-spacing-01: 0.125rem; /*  2px */
-  --p-spacing-02: 0.25rem; /*   4px */
-  --p-spacing-03: 0.5rem; /*    8px */
-  --p-spacing-04: 0.75rem; /*  12px */
-  --p-spacing-05: 1rem; /*     16px */
-  --p-spacing-06: 1.5rem; /*   24px */
-  --p-spacing-07: 2rem; /*     32px */
-  --p-spacing-08: 2.5rem; /*   40px */
-  --p-spacing-09: 3rem; /*     48px */
-  --p-spacing-10: 4rem; /*     64px */
+  /* 4px spacing scale */
+  --p-space-01: 0.25rem; /*  4px */
+  --p-space-02: 0.5rem; /*   8px */
+  --p-space-03: 0.75rem; /* 12px */
+  --p-space-04: 1rem; /*    16px */
+  --p-space-05: 1.5rem; /*  24px */
+  --p-space-06: 2rem; /*    32px */
+  --p-space-07: 3rem; /*    48px */
+  --p-space-08: 4rem; /*    64px */
 
   /* ---------- tier 2: semantic ---------- */
   --s-background: var(--p-white);
-  --s-layer-01: var(--p-grey-10);
-  --s-layer-02: var(--p-white);
+  --s-layer-01: var(--p-grey-05);
+  --s-layer-accent: var(--p-purple-tint);
   --s-border-subtle: var(--p-grey-20);
-  --s-border-strong: var(--p-grey-50);
+  --s-border-strong: var(--p-grey-40);
 
-  --s-text-primary: var(--p-grey-100);
-  --s-text-secondary: var(--p-grey-70);
+  --s-text-primary: var(--p-grey-80);
+  --s-text-secondary: var(--p-grey-60);
   --s-text-helper: var(--p-grey-60);
   --s-text-on-color: var(--p-white);
 
-  --s-link-primary: var(--p-blue-60);
-  --s-link-primary-hover: var(--p-blue-70);
-  --s-focus: var(--p-blue-60);
+  --s-brand: var(--p-purple-60);
+  --s-brand-strong: var(--p-purple-80);
+  --s-brand-light: var(--p-purple-40);
+  --s-accent: var(--p-peach-50);
 
-  --s-header-bg: var(--p-grey-100);
-  --s-header-border: var(--p-grey-80);
-  --s-header-text: var(--p-grey-10);
+  --s-link: var(--p-purple-60);
+  --s-link-hover: var(--p-purple-80);
+  --s-focus: var(--p-purple-60);
 
-  --s-hover-ui: rgba(141, 141, 141, 0.16);
-  --s-selected-ui: var(--p-grey-20);
+  --s-hover-ui: var(--p-grey-05);
+  --s-selected-ui: var(--p-purple-tint);
 
-  /* Latin and Thai must both be served. */
-  --s-font-sans: 'IBM Plex Sans', 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --s-font-sans: 'IBM Plex Sans Thai', 'IBM Plex Sans', 'Sukhumvit Set', system-ui,
+    sans-serif;
   --s-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   /* ---------- tier 3: component ---------- */
-  --c-header-height: 3rem; /* 48px — Carbon UI shell */
-  --c-sidenav-width: 16rem; /* 256px */
-  --c-content-max: 40rem;
+  --c-header-height: 3.5rem;
+  --c-sidenav-width: 17.5rem;
+  --c-content-max: 62rem;
+  --c-radius: 4px;
 }
 
 *,
@@ -79,7 +87,7 @@
 }
 
 html {
-  scroll-padding-top: calc(var(--c-header-height) + var(--p-spacing-05));
+  scroll-padding-top: calc(var(--c-header-height) + var(--p-space-04));
 }
 
 body {
@@ -87,26 +95,24 @@ body {
   background: var(--s-background);
   color: var(--s-text-primary);
   font-family: var(--s-font-sans);
-  font-size: 0.875rem; /* Carbon body-01 */
-  line-height: 1.43;
-  letter-spacing: 0.16px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Carbon is square. No border radius anywhere. */
 a {
-  color: var(--s-link-primary);
-  text-decoration: none;
+  color: var(--s-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 a:hover {
-  color: var(--s-link-primary-hover);
-  text-decoration: underline;
+  color: var(--s-link-hover);
 }
 
 /* Accessibility floor: a visible focus ring is non-negotiable. */
 :focus-visible {
   outline: 2px solid var(--s-focus);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -55,11 +55,22 @@ in `product-context` to suit the build.
 
 ## Token layer
 
-`src/styles/tokens.css` is a **placeholder** for the site shell. It is not the SCB design
-language system and carries no design decision. It follows the three-tier structure
-(primitive → semantic → component) so that replacing it with generated token output is a
-swap rather than a rewrite. Once the real pipeline exists, that file is generated and
-never hand-edited.
+`src/styles/tokens.css` is a **placeholder** for the site shell. Values are sampled from
+scb.co.th (purple ramp `#7A58BF`–`#412775`, peach `#F6A969`, tint `#EBECF5`) so the shell
+reads as SCB. They are not authoritative and carry no design decision. The file follows
+the three-tier structure (primitive → semantic → component) so replacing it with generated
+token output is a swap rather than a rewrite. Once the real pipeline exists it is
+generated and never hand-edited.
+
+**Typeface debt.** SCB's brand face is Sukhumvit Tadmai (Cadson Demak), which is licensed
+and cannot be self-hosted here. The stack falls back to IBM Plex Sans Thai — also Cadson
+Demak, similar humanist Thai construction — so proportions are close but not correct.
+Licensing the real face is an open item.
+
+**Data debt.** `src/data/sister-apps.ts` transcribes the nine-app portfolio from the SCBX
+Screen Estate artefact. It is a copy, and copies drift. The list belongs in
+product-context as a register the site reads; it sits in code only because the source
+currently holds it inside a prose table rather than as structured data.
 
 ## House style
 
