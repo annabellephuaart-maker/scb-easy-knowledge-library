@@ -12,8 +12,11 @@
  * padding and margin silently disappeared, which looked like a layout bug
  * rather than a rename.
  *
- * Variables set at runtime by script (--lane, --lanes) are exempt: they are
- * assigned inline and always read with a fallback.
+ * A custom property defined inside the same file is legitimate — components
+ * are allowed local variables that are not design tokens. Those are collected
+ * per file and accepted.
+ *
+ * Variables assigned only at runtime by script are listed in RUNTIME_SET.
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -21,7 +24,7 @@ import { join, extname } from 'node:path';
 
 const TOKENS = 'src/styles/tokens.css';
 const ROOT = 'src';
-const RUNTIME_SET = new Set(['--lane', '--lanes']);
+const RUNTIME_SET = new Set(['--lane', '--lanes', '--cols']);
 
 const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
@@ -37,10 +40,12 @@ const problems = [];
 for (const file of walk(ROOT)) {
   if (!['.astro', '.css'].includes(extname(file))) continue;
   const text = readFileSync(file, 'utf8');
+  // Custom properties the file defines for itself.
+  const local = new Set([...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
   text.split('\n').forEach((line, i) => {
     for (const match of line.matchAll(/var\((--[a-z0-9-]+)/g)) {
       const name = match[1];
-      if (defined.has(name) || RUNTIME_SET.has(name)) continue;
+      if (defined.has(name) || local.has(name) || RUNTIME_SET.has(name)) continue;
       problems.push(`${file}:${i + 1}  ${name} is not defined in ${TOKENS}`);
     }
   });

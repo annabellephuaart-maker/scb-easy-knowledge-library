@@ -1,0 +1,532 @@
+---
+import { matrixApps, matrixArchetypes, matrixScreens } from '../data/screen-matrix';
+
+const byCell = (app: string, archetype: string) =>
+  matrixScreens.filter((s) => s.app === app && s.archetype === archetype);
+
+const ready = matrixScreens.length > 0;
+---
+
+{
+  !ready && (
+    <p class="not-built">
+      <strong>Screen dataset not generated yet.</strong> Run
+      <code>node scripts/build-screen-matrix.mjs</code> to read the SCBX Screen Estate
+      artefact, copy its screens into <code>public/screens/</code>, and build the matrix.
+    </p>
+  )
+}
+
+<section class="mx" data-matrix hidden={!ready}>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" data-view="compare" aria-pressed="true">Compare</button>
+      <button type="button" data-view="sheet" aria-pressed="false">Contact sheet</button>
+    </div>
+
+    <label class="search">
+      <span class="sr">Search screens</span>
+      <input type="search" data-search placeholder="Search screens — QR, login, home…" />
+    </label>
+
+    <div class="seg" role="group" aria-label="Size">
+      <button type="button" data-size="s" aria-pressed="false">S</button>
+      <button type="button" data-size="m" aria-pressed="true">M</button>
+      <button type="button" data-size="l" aria-pressed="false">L</button>
+    </div>
+
+    <p class="tally" data-tally aria-live="polite"></p>
+  </div>
+
+  <div class="body">
+    <aside class="rail">
+      <section>
+        <h3>
+          Apps <button type="button" data-all="app">all / none</button>
+        </h3>
+        {
+          matrixApps.map((app) => (
+            <label class="opt">
+              <input type="checkbox" data-filter-app value={app.slug} checked />
+              <span class="nm">{app.name}</span>
+              <span class="ct">{app.count}</span>
+            </label>
+          ))
+        }
+      </section>
+
+      <section>
+        <h3>
+          Archetypes <button type="button" data-all="arch">all / none</button>
+        </h3>
+        {
+          matrixArchetypes.map((a) => (
+            <label class="opt">
+              <input type="checkbox" data-filter-arch value={a} checked />
+              <span class="nm">{a}</span>
+              <span class="ct">
+                {matrixScreens.filter((s) => s.archetype === a).length}
+              </span>
+            </label>
+          ))
+        }
+      </section>
+    </aside>
+
+    <div class="stage" data-size="m">
+      {/* Compare: archetype rows against app columns, so one moment reads across. */}
+      <div class="cmp" data-compare>
+        <div class="row head" data-head>
+          <div class="corner">Archetype</div>
+          {
+            matrixApps.map((app) => (
+              <div class="hcell" data-col={app.slug}>
+                {app.name}
+              </div>
+            ))
+          }
+        </div>
+        {
+          matrixArchetypes.map((arch) => (
+            <div class="row" data-row={arch}>
+              <div class="rlab">{arch}</div>
+              {matrixApps.map((app) => (
+                <div class="cell" data-col={app.slug}>
+                  {byCell(app.slug, arch).map((s) => (
+                    <button
+                      type="button"
+                      class="shot"
+                      data-screen
+                      data-app={s.app}
+                      data-arch={s.archetype}
+                      data-desc={s.description}
+                      data-src={s.src}
+                    >
+                      <img src={s.src} alt={`${s.appName} — ${s.description}`} loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+
+      {/* Contact sheet: every screen, ungrouped. */}
+      <div class="sheet" data-sheet hidden>
+        {
+          matrixScreens.map((s) => (
+            <button
+              type="button"
+              class="shot"
+              data-screen
+              data-app={s.app}
+              data-arch={s.archetype}
+              data-desc={s.description}
+              data-src={s.src}
+            >
+              <img src={s.src} alt={`${s.appName} — ${s.description}`} loading="lazy" />
+              <span class="cap">{s.appName}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <p class="empty" data-empty hidden>No screens match those filters.</p>
+    </div>
+  </div>
+
+  <dialog class="viewer" data-viewer>
+    <form method="dialog">
+      <button class="close" aria-label="Close">×</button>
+    </form>
+    <img data-viewer-img src="" alt="" />
+    <p data-viewer-cap></p>
+  </dialog>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-matrix]');
+  if (root) {
+    const stage = root.querySelector<HTMLElement>('.stage')!;
+    const compare = root.querySelector<HTMLElement>('[data-compare]')!;
+    const sheet = root.querySelector<HTMLElement>('[data-sheet]')!;
+    const tally = root.querySelector<HTMLElement>('[data-tally]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const search = root.querySelector<HTMLInputElement>('[data-search]')!;
+    const compareShots = [...compare.querySelectorAll<HTMLElement>('[data-screen]')];
+    const sheetShots = [...sheet.querySelectorAll<HTMLElement>('[data-screen]')];
+    // Every screen is rendered twice, once per view. Count one view only.
+    const shots = [...compareShots, ...sheetShots];
+    const total = compareShots.length;
+    const appBoxes = [...root.querySelectorAll<HTMLInputElement>('[data-filter-app]')];
+    const archBoxes = [...root.querySelectorAll<HTMLInputElement>('[data-filter-arch]')];
+
+    const press = (group: string, value: string) =>
+      root
+        .querySelectorAll<HTMLButtonElement>(`[data-${group}]`)
+        .forEach((b) =>
+          b.setAttribute('aria-pressed', String(b.dataset[group] === value))
+        );
+
+    const apply = () => {
+      const apps = new Set(appBoxes.filter((b) => b.checked).map((b) => b.value));
+      const arch = new Set(archBoxes.filter((b) => b.checked).map((b) => b.value));
+      const q = search.value.trim().toLowerCase();
+
+      let visible = 0;
+      const liveApps = new Set<string>();
+      for (const shot of shots) {
+        const ok =
+          apps.has(shot.dataset.app ?? '') &&
+          arch.has(shot.dataset.arch ?? '') &&
+          (!q || (shot.dataset.desc ?? '').toLowerCase().includes(q));
+        shot.hidden = !ok;
+        if (ok) {
+          visible += 1;
+          liveApps.add(shot.dataset.app ?? '');
+        }
+      }
+
+      // Collapse columns and rows that have nothing left in them.
+      root.querySelectorAll<HTMLElement>('[data-col]').forEach((el) => {
+        el.hidden = !liveApps.has(el.dataset.col ?? '');
+      });
+      root.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
+        const any = [...row.querySelectorAll<HTMLElement>('[data-screen]')].some(
+          (s) => !s.hidden
+        );
+        row.hidden = !any;
+      });
+      const cols = liveApps.size;
+      root
+        .querySelectorAll<HTMLElement>('.row')
+        .forEach((r) => r.style.setProperty('--cols', String(cols)));
+
+      tally.textContent = `${visible / 2} of ${total} screens · ${cols} apps`;
+      empty.hidden = visible > 0;
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const sheetView = b.dataset.view === 'sheet';
+        compare.hidden = sheetView;
+        sheet.hidden = !sheetView;
+        press('view', b.dataset.view ?? '');
+      })
+    );
+
+    root.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((b) =>
+      b.addEventListener('click', () => {
+        stage.dataset.size = b.dataset.size ?? 'm';
+        press('size', b.dataset.size ?? '');
+      })
+    );
+
+    root.querySelectorAll<HTMLButtonElement>('[data-all]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const boxes = b.dataset.all === 'app' ? appBoxes : archBoxes;
+        const turnOn = boxes.some((x) => !x.checked);
+        boxes.forEach((x) => (x.checked = turnOn));
+        apply();
+      })
+    );
+
+    [...appBoxes, ...archBoxes].forEach((b) => b.addEventListener('change', apply));
+    search.addEventListener('input', apply);
+
+    // Lightbox
+    const viewer = root.querySelector<HTMLDialogElement>('[data-viewer]')!;
+    const vImg = root.querySelector<HTMLImageElement>('[data-viewer-img]')!;
+    const vCap = root.querySelector<HTMLElement>('[data-viewer-cap]')!;
+    shots.forEach((s) =>
+      s.addEventListener('click', () => {
+        vImg.src = s.dataset.src ?? '';
+        vImg.alt = s.dataset.desc ?? '';
+        vCap.textContent = s.dataset.desc ?? '';
+        viewer.showModal();
+      })
+    );
+
+    apply();
+  }
+</script>
+
+<style>
+  .not-built {
+    margin: var(--p-space-05) 0;
+    padding: var(--p-space-04);
+    border-left: 3px solid var(--s-accent);
+    background: var(--s-layer-01);
+    border-radius: var(--c-radius);
+    font-size: 0.875rem;
+    color: var(--s-text-secondary);
+  }
+  .not-built code {
+    font-family: var(--s-font-mono);
+    font-size: 0.8125rem;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .mx {
+    /* Escapes the reading column. A comparison grid needs the width, while
+       the prose around it still wants a comfortable measure. */
+    width: calc(100vw - var(--c-sidenav-width) - var(--p-space-06) * 2);
+    max-width: calc(100vw - var(--c-sidenav-width) - var(--p-space-06) * 2);
+    margin: var(--p-space-05) 0;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--p-space-03);
+    align-items: center;
+    padding: var(--p-space-03) var(--p-space-04);
+    border-bottom: 1px solid var(--s-border-subtle);
+    background: var(--s-layer-01);
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    background: var(--s-background);
+  }
+  .seg button {
+    font: inherit;
+    font-size: 0.8125rem;
+    padding: var(--p-space-02) var(--p-space-04);
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--s-border-subtle);
+    color: var(--s-text-secondary);
+    cursor: pointer;
+  }
+  .seg button:last-child {
+    border-right: 0;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--s-selected-ui);
+    color: var(--s-brand-strong);
+    font-weight: 600;
+  }
+  .search input {
+    font: inherit;
+    font-size: 0.8125rem;
+    padding: var(--p-space-02) var(--p-space-03);
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    background: var(--s-background);
+    min-width: 14rem;
+  }
+  .tally {
+    margin: 0 0 0 auto;
+    font-family: var(--s-font-mono);
+    font-size: 0.75rem;
+    color: var(--s-text-secondary);
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 1fr);
+  }
+  .rail {
+    border-right: 1px solid var(--s-border-subtle);
+    padding: var(--p-space-04);
+    max-height: 40rem;
+    overflow-y: auto;
+  }
+  .rail section + section {
+    margin-top: var(--p-space-05);
+    padding-top: var(--p-space-04);
+    border-top: 1px solid var(--s-border-subtle);
+  }
+  .rail h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--p-space-02);
+    margin: 0 0 var(--p-space-02);
+    font-family: var(--s-font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--s-text-helper);
+    font-weight: 500;
+  }
+  .rail h3 button {
+    font: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--s-link);
+    cursor: pointer;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-02);
+    padding: var(--p-space-01) 0;
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+  .opt .nm {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .opt .ct {
+    margin-left: auto;
+    font-family: var(--s-font-mono);
+    font-size: 0.6875rem;
+    color: var(--s-text-helper);
+  }
+
+  .stage {
+    padding: var(--p-space-04);
+    overflow-x: auto;
+    --tile: 7.5rem;
+  }
+  .stage[data-size='s'] {
+    --tile: 5rem;
+  }
+  .stage[data-size='l'] {
+    --tile: 11rem;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 9rem repeat(var(--cols, 9), var(--tile));
+    gap: var(--p-space-02);
+    align-items: start;
+    border-bottom: 1px solid var(--s-border-subtle);
+    padding: var(--p-space-03) 0;
+  }
+  .row.head {
+    position: sticky;
+    top: 0;
+    background: var(--s-background);
+    z-index: 2;
+    border-bottom: 1px solid var(--s-border-strong);
+  }
+  .corner,
+  .hcell,
+  .rlab {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: var(--p-space-02);
+  }
+  .corner,
+  .rlab {
+    color: var(--s-text-secondary);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--s-background);
+    /* Edge for the label column while the cells scroll under it. */
+    box-shadow: 1px 0 0 var(--s-border-subtle);
+  }
+  .row.head .corner {
+    z-index: 3;
+  }
+  .cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--p-space-02);
+  }
+
+  .shot {
+    padding: 0;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    background: var(--s-layer-01);
+    cursor: zoom-in;
+    overflow: hidden;
+    width: var(--tile);
+  }
+  .shot:hover {
+    border-color: var(--s-brand);
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1.9;
+    object-fit: cover;
+    object-position: top center;
+  }
+  .shot .cap {
+    display: block;
+    font-size: 0.625rem;
+    padding: var(--p-space-01);
+    color: var(--s-text-secondary);
+    text-align: left;
+  }
+
+  .sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--p-space-03);
+  }
+  .empty {
+    padding: var(--p-space-05);
+    color: var(--s-text-helper);
+    font-size: 0.875rem;
+  }
+
+  .viewer {
+    border: 0;
+    border-radius: var(--c-radius);
+    padding: var(--p-space-04);
+    max-width: min(92vw, 30rem);
+  }
+  .viewer::backdrop {
+    background: rgb(0 0 0 / 0.6);
+  }
+  .viewer img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .viewer p {
+    margin: var(--p-space-03) 0 0;
+    font-size: 0.8125rem;
+    color: var(--s-text-secondary);
+  }
+  .viewer .close {
+    position: absolute;
+    top: var(--p-space-02);
+    right: var(--p-space-02);
+    font-size: 1.25rem;
+    line-height: 1;
+    background: var(--s-background);
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    cursor: pointer;
+  }
+
+  @media (max-width: 60rem) {
+    /* The sidebar collapses below this width, so the break-out no longer
+       applies — fall back to the container. */
+    .mx {
+      width: auto;
+      max-width: 100%;
+    }
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .rail {
+      border-right: 0;
+      border-bottom: 1px solid var(--s-border-subtle);
+      max-height: 16rem;
+    }
+  }
+</style>

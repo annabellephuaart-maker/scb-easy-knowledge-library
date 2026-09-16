@@ -192,6 +192,40 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
 
     <script>
       /**
+       * Keep the sidebar where the reader left it.
+       *
+       * Each page is a full document load, so the nav is rebuilt from scratch
+       * and its scroll position resets to the top. On a long nav that throws
+       * the reader back to the first section every time they open a page.
+       *
+       * Saved on unload, restored before paint so there is no visible jump.
+       */
+      const SIDENAV_KEY = 'sidenav-scroll';
+      const sidenav = document.querySelector<HTMLElement>('.sidenav');
+      if (sidenav) {
+        const saved = sessionStorage.getItem(SIDENAV_KEY);
+        if (saved) sidenav.scrollTop = Number(saved) || 0;
+
+        const save = () => sessionStorage.setItem(SIDENAV_KEY, String(sidenav.scrollTop));
+        sidenav.addEventListener('scroll', save, { passive: true });
+        window.addEventListener('pagehide', save);
+
+        // If the active item is out of view — arriving from a link elsewhere,
+        // or a first visit — bring it into view instead of leaving it hidden.
+        const current = sidenav.querySelector<HTMLElement>('[aria-current="page"]');
+        if (current) {
+          const navBox = sidenav.getBoundingClientRect();
+          const itemBox = current.getBoundingClientRect();
+          if (itemBox.top < navBox.top || itemBox.bottom > navBox.bottom) {
+            current.scrollIntoView({ block: 'center' });
+            save();
+          }
+        }
+      }
+    </script>
+
+    <script>
+      /**
        * Section navigation, built from the page's own <h2> headings.
        *
        * Generated at runtime rather than hand-listed, so it cannot drift from
@@ -365,8 +399,11 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         padding-left: var(--p-space-06);
       }
 
-      .sidenav li a.child {
-        padding-left: var(--p-space-07);
+      /* One indent deeper than its group. Needs to out-specify the rule above,
+         which would otherwise flatten it back to the parent's indent. */
+      .sidenav .stream ul li a.child,
+      .sidenav details ul li a.child {
+        padding-left: var(--p-space-08);
         font-size: 0.8125rem;
       }
       .sidenav li a.retired {

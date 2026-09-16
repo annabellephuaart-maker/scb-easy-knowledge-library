@@ -2,6 +2,8 @@
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import CompetitorGrid from '../components/CompetitorGrid.astro';
+import ScreenMatrix from '../components/ScreenMatrix.astro';
+import AppGallery from '../components/AppGallery.astro';
 
 export async function getStaticPaths() {
   const entries = await getCollection('research');
@@ -48,6 +50,24 @@ const meta = [
       <section>
         <h2 id="the-apps">The apps</h2>
         <CompetitorGrid />
+      </section>
+    )
+  }
+
+  {
+    entry.data.visual === 'screen-matrix' && (
+      <section>
+        <h2 id="the-matrix">Screen matrix</h2>
+        <ScreenMatrix />
+      </section>
+    )
+  }
+
+  {
+    entry.data.gallery && (
+      <section>
+        <h2 id="screens">Screens</h2>
+        <AppGallery slug={entry.data.gallery} />
       </section>
     )
   }

@@ -1,0 +1,228 @@
+---
+import { galleries } from '../data/audit-galleries';
+
+interface Props {
+  /** Key into the generated galleries. */
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const gallery = galleries[slug];
+const id = `app-gallery-${slug}`;
+---
+
+{
+  !gallery && (
+    <p class="not-built">
+      <strong>No screens for “{slug}” yet.</strong> Run
+      <code>node scripts/build-audit-galleries.mjs</code> to pull them from the SCBX
+      artefact or the App Store listing.
+    </p>
+  )
+}
+
+{
+  gallery && (
+    <figure class="gal" id={id} data-gallery={slug}>
+      <div class="stage">
+        <img
+          src={gallery.screens[0].src}
+          alt={gallery.screens[0].caption}
+          data-stage
+          width="520"
+          height="1040"
+        />
+      </div>
+
+      <div class="side">
+        <p class="count">
+          <strong data-index>1</strong> of {gallery.screens.length}
+          <span class="src"> · {gallery.source}</span>
+        </p>
+
+        {gallery.kind === 'store' && (
+          <p class="warn">
+            Store creatives, not interface. These are marketing images chosen by the
+            vendor — they show how the product presents itself, not how it behaves.
+          </p>
+        )}
+
+        <div class="thumbs" role="tablist" aria-label={`${gallery.name} screens`}>
+          {gallery.screens.map((screen, i) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={id}
+              data-thumb
+              data-src={screen.src}
+              data-caption={screen.caption}
+            >
+              <img src={screen.src} alt="" loading="lazy" width="120" height="240" />
+            </button>
+          ))}
+        </div>
+
+        <figcaption data-caption>{gallery.screens[0].caption}</figcaption>
+
+        {gallery.storeUrl && (
+          <p class="link">
+            <a href={gallery.storeUrl} rel="noreferrer">
+              View the listing
+            </a>
+          </p>
+        )}
+      </div>
+    </figure>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((gallery) => {
+    const stage = gallery.querySelector<HTMLImageElement>('[data-stage]');
+    const caption = gallery.querySelector<HTMLElement>('[data-caption]');
+    const index = gallery.querySelector<HTMLElement>('[data-index]');
+    const thumbs = [...gallery.querySelectorAll<HTMLButtonElement>('[data-thumb]')];
+    if (!stage || !thumbs.length) return;
+
+    const show = (i: number, focus = false) => {
+      const thumb = thumbs[i];
+      if (!thumb) return;
+      stage.src = thumb.dataset.src ?? '';
+      stage.alt = thumb.dataset.caption ?? '';
+      if (caption) caption.textContent = thumb.dataset.caption ?? '';
+      if (index) index.textContent = String(i + 1);
+      thumbs.forEach((t, n) => {
+        t.setAttribute('aria-selected', n === i ? 'true' : 'false');
+        t.tabIndex = n === i ? 0 : -1;
+      });
+      if (focus) thumb.focus();
+    };
+
+    thumbs.forEach((thumb, i) => {
+      thumb.tabIndex = i === 0 ? 0 : -1;
+      thumb.addEventListener('click', () => show(i));
+    });
+
+    // Roving tabindex, per the WAI-ARIA tabs pattern.
+    gallery.addEventListener('keydown', (event) => {
+      const current = thumbs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      if (current === -1) return;
+      const last = thumbs.length - 1;
+      const key = (event as KeyboardEvent).key;
+      if (key === 'ArrowRight' || key === 'ArrowDown') show(Math.min(current + 1, last), true);
+      else if (key === 'ArrowLeft' || key === 'ArrowUp') show(Math.max(current - 1, 0), true);
+      else if (key === 'Home') show(0, true);
+      else if (key === 'End') show(last, true);
+      else return;
+      event.preventDefault();
+    });
+  });
+</script>
+
+<style>
+  .not-built {
+    margin: var(--p-space-05) 0;
+    padding: var(--p-space-04);
+    border-left: 3px solid var(--s-accent);
+    background: var(--s-layer-01);
+    border-radius: var(--c-radius);
+    font-size: 0.875rem;
+    color: var(--s-text-secondary);
+  }
+  .not-built code {
+    font-family: var(--s-font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .gal {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--p-space-05);
+    margin: var(--p-space-05) 0;
+    padding: var(--p-space-05);
+    background: var(--s-layer-01);
+    border-radius: var(--c-radius);
+  }
+  .stage {
+    max-height: 24rem;
+    background: var(--s-background);
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+  .stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: top center;
+    display: block;
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-space-03);
+  }
+  .count {
+    margin: 0;
+    font-family: var(--s-font-mono);
+    font-size: 0.75rem;
+    color: var(--s-text-secondary);
+  }
+  .count .src {
+    color: var(--s-text-helper);
+  }
+  .warn {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--s-text-secondary);
+    border-left: 2px solid var(--s-accent);
+    padding-left: var(--p-space-03);
+  }
+  .thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
+    gap: var(--p-space-02);
+  }
+  .thumbs button {
+    padding: 0;
+    border: 1px solid var(--s-border-subtle);
+    border-radius: var(--c-radius);
+    background: var(--s-background);
+    cursor: pointer;
+    overflow: hidden;
+    aspect-ratio: 1 / 1.6;
+  }
+  .thumbs button:hover {
+    border-color: var(--s-brand-light);
+  }
+  .thumbs button[aria-selected='true'] {
+    border-color: var(--s-brand);
+    box-shadow: 0 0 0 2px var(--s-brand);
+  }
+  .thumbs img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  figcaption {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--s-text-secondary);
+  }
+  .link {
+    margin: auto 0 0;
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 48rem) {
+    .gal {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
