@@ -18,6 +18,7 @@ export interface Gallery {
   seller?: string;
   source: string;
   storeUrl?: string;
+  icon?: string;
   kind: 'mixed' | 'store';
   rating?: number;
   ratingCount?: number;
@@ -27,8 +28,13 @@ export interface Gallery {
 export const galleries: Record<string, Gallery> = {
   "scb-easy": {
     "name": "SCB EASY",
+    "seller": "The Siam Commercial Bank PCL",
     "source": "SCBX Screen Estate artefact",
+    "storeUrl": "https://apps.apple.com/th/app/scb-easy/id568388474?uo=4",
+    "icon": "/audit/scb-easy/icon.png",
     "kind": "mixed",
+    "rating": 3.4,
+    "ratingCount": 25502,
     "screens": [
       {
         "src": "/screens/scb-easy-01.jpg",
@@ -264,8 +270,13 @@ export const galleries: Record<string, Gallery> = {
   },
   "cardx": {
     "name": "CardX",
+    "seller": "CARD X COMPANY LIMITED",
     "source": "SCBX Screen Estate artefact",
+    "storeUrl": "https://apps.apple.com/th/app/cardx/id1622961294?uo=4",
+    "icon": "/audit/cardx/icon.png",
     "kind": "mixed",
+    "rating": 2.55,
+    "ratingCount": 1846,
     "screens": [
       {
         "src": "/screens/cardx-01.jpg",
@@ -341,8 +352,13 @@ export const galleries: Record<string, Gallery> = {
   },
   "invx": {
     "name": "INVX",
+    "seller": "InnovestX Securities Co., Ltd.",
     "source": "SCBX Screen Estate artefact",
+    "storeUrl": "https://apps.apple.com/th/app/invx-innovestx-%E0%B9%81%E0%B8%AD%E0%B8%9B%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%87%E0%B8%97-%E0%B8%99/id1434520713?uo=4",
+    "icon": "/audit/invx/icon.png",
     "kind": "mixed",
+    "rating": 3.97,
+    "ratingCount": 5112,
     "screens": [
       {
         "src": "/screens/invx-01.jpg",
@@ -408,8 +424,13 @@ export const galleries: Record<string, Gallery> = {
   },
   "pointx": {
     "name": "POINTX",
+    "seller": "SCB TECH X COMPANY LIMITED",
     "source": "SCBX Screen Estate artefact",
+    "storeUrl": "https://apps.apple.com/th/app/pointx-app/id1596876529?uo=4",
+    "icon": "/audit/pointx/icon.png",
     "kind": "mixed",
+    "rating": 4.01,
+    "ratingCount": 1138,
     "screens": [
       {
         "src": "/screens/pointx-01.jpg",
@@ -483,6 +504,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "KASIKORNBANK PUBLIC COMPANY LIMITED",
     "source": "Apple App Store (TH)",
     "storeUrl": "https://apps.apple.com/th/app/k-plus/id361170631?uo=4",
+    "icon": "/audit/kbank/icon.png",
     "kind": "store",
     "rating": 3.68,
     "ratingCount": 32807,
@@ -524,6 +546,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "True Money Company Limited",
     "source": "Apple App Store (TH)",
     "storeUrl": "https://apps.apple.com/th/app/truemoney-pay-earn-coins/id663885752?uo=4",
+    "icon": "/audit/truemoney/icon.png",
     "kind": "store",
     "rating": 3.97,
     "ratingCount": 69715,
@@ -565,6 +588,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "DBS Bank Ltd",
     "source": "Apple App Store (SG)",
     "storeUrl": "https://apps.apple.com/sg/app/dbs-digibank/id1068403826?uo=4",
+    "icon": "/audit/dbs/icon.png",
     "kind": "store",
     "rating": 4.67,
     "ratingCount": 159054,
@@ -606,6 +630,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "Revolut Ltd",
     "source": "Apple App Store (GB)",
     "storeUrl": "https://apps.apple.com/gb/app/revolut-mobile-finance/id932493382?uo=4",
+    "icon": "/audit/revolut/icon.png",
     "kind": "store",
     "rating": 4.86,
     "ratingCount": 1076226,
@@ -647,6 +672,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "NU PAGAMENTOS S/A INSTITUICAO DE PAGAMENTO",
     "source": "Apple App Store (BR)",
     "storeUrl": "https://apps.apple.com/br/app/nubank-conta-cart%C3%A3o-e-mais/id814456780?uo=4",
+    "icon": "/audit/nubank/icon.png",
     "kind": "store",
     "rating": 4.82,
     "ratingCount": 1632755,
@@ -688,6 +714,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "GRABTAXI HOLDINGS PTE. LTD.",
     "source": "Apple App Store (SG)",
     "storeUrl": "https://apps.apple.com/sg/app/grab-food-delivery-taxi-ride/id647268330?uo=4",
+    "icon": "/audit/grab/icon.png",
     "kind": "store",
     "rating": 4.78,
     "ratingCount": 251323,
@@ -729,6 +756,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "Anthropic PBC",
     "source": "Apple App Store (US)",
     "storeUrl": "https://apps.apple.com/us/app/claude-by-anthropic/id6473753684?uo=4",
+    "icon": "/audit/claude/icon.png",
     "kind": "store",
     "rating": 4.72,
     "ratingCount": 263229,
@@ -770,6 +798,7 @@ export const galleries: Record<string, Gallery> = {
     "seller": "OpenAI OpCo, LLC",
     "source": "Apple App Store (US)",
     "storeUrl": "https://apps.apple.com/us/app/chatgpt/id6448311069?uo=4",
+    "icon": "/audit/chatgpt/icon.png",
     "kind": "store",
     "rating": 4.83,
     "ratingCount": 10332633,

@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import CompetitorGrid from '../components/CompetitorGrid.astro';
 import ScreenMatrix from '../components/ScreenMatrix.astro';
 import AppGallery from '../components/AppGallery.astro';
+import { galleries } from '../data/audit-galleries';
 
 export async function getStaticPaths() {
   const entries = await getCollection('research');
@@ -15,6 +16,53 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+/**
+ * Section imagery for app pages.
+ *
+ * The screens live in the site, the prose lives in product-context, and the
+ * markdown must not carry site-specific image paths. So the rendered HTML is
+ * post-processed here: the app icon lands under "About the company" and a
+ * screen strip under "About the app", keyed on the headings the pages already
+ * use.
+ */
+const gallery = entry.data.gallery ? galleries[entry.data.gallery] : undefined;
+
+const esc = (t: string) =>
+  t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+const strip = (count: number) =>
+  `<div class="sec-strip">${gallery!.screens
+    .slice(0, count)
+    .map(
+      (s) =>
+        `<figure><img src="${s.src}" alt="${esc(s.caption)}" loading="lazy" /><figcaption>${esc(
+          s.caption
+        )}</figcaption></figure>`
+    )
+    .join('')}</div>`;
+
+const after = (html: string, heading: RegExp, insert: string) =>
+  html.replace(heading, (m) => m + insert);
+
+let sectioned: string | null = null;
+if (gallery && entry.rendered?.html) {
+  let html = entry.rendered.html;
+  if (gallery.icon) {
+    html = after(
+      html,
+      /<h2[^>]*>\s*1\.\s*About the company\s*<\/h2>/i,
+      `<figure class="sec-logo"><img src="${gallery.icon}" alt="${esc(
+        gallery.name
+      )} app icon" width="96" height="96" /></figure>`
+    );
+  }
+  if (gallery.screens.length) {
+    html = after(html, /<h2[^>]*>\s*3\.\s*About the app\s*<\/h2>/i, strip(5));
+    html = after(html, /<h2[^>]*>\s*4\.\s*Key screens\s*<\/h2>/i, strip(10));
+  }
+  sectioned = html;
+}
 
 const title = entry.data.name ?? entry.data.title ?? entry.id;
 
@@ -73,7 +121,7 @@ const meta = [
   }
 
   <article>
-    <Content />
+    {sectioned ? <Fragment set:html={sectioned} /> : <Content />}
   </article>
 
   <p class="source">
@@ -102,6 +150,45 @@ const meta = [
     .meta dd {
       margin: var(--p-space-02) 0 0;
       font-size: 0.875rem;
+    }
+    article :global(.sec-logo) {
+      margin: var(--p-space-04) 0;
+      padding: var(--p-space-04);
+      border: 1px solid var(--s-border-subtle);
+      border-radius: var(--c-radius);
+      display: inline-block;
+      background: var(--s-background);
+    }
+    article :global(.sec-logo img) {
+      display: block;
+      width: 5rem;
+      height: 5rem;
+      border-radius: 14px;
+    }
+    article :global(.sec-strip) {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: var(--p-space-04);
+      margin: var(--p-space-04) 0 var(--p-space-05);
+    }
+    article :global(.sec-strip figure) {
+      margin: 0;
+    }
+    article :global(.sec-strip img) {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1.9;
+      object-fit: cover;
+      object-position: top center;
+      border: 1px solid var(--s-border-subtle);
+      border-radius: var(--c-radius);
+      background: var(--s-layer-01);
+    }
+    article :global(.sec-strip figcaption) {
+      margin-top: var(--p-space-02);
+      font-size: 0.6875rem;
+      line-height: 1.4;
+      color: var(--s-text-helper);
     }
     .source {
       margin-top: var(--p-space-08);

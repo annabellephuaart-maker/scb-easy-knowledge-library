@@ -33,6 +33,14 @@ const FROM_ARTEFACT = {
   pointx: 'pointx',
 };
 
+/** Store lookup for icon and metrics, including artefact-sourced apps. */
+const STORE_LOOKUP = {
+  'scb-easy': { term: 'SCB EASY', country: 'th', match: /^scb easy$/i },
+  cardx: { term: 'CardX', country: 'th', match: /^cardx/i },
+  invx: { term: 'INVX InnovestX', country: 'th', match: /invx/i },
+  pointx: { term: 'PointX', country: 'th', match: /pointx/i },
+};
+
 /** Everything else, looked up in the App Store. */
 const FROM_STORE = {
   kbank: { term: 'K PLUS', country: 'th', match: /^K PLUS$/i },
@@ -56,6 +64,26 @@ mkdirSync(OUT_IMG, { recursive: true });
 
 const galleries = {};
 
+/** Finds an app in the App Store and returns its icon plus headline metrics. */
+async function storeMeta(slug, cfg, dir) {
+  const url =
+    'https://itunes.apple.com/search?' +
+    new URLSearchParams({ term: cfg.term, country: cfg.country, entity: 'software', limit: '8' });
+  const results = (await (await get(url)).json()).results ?? [];
+  const app = results.find((r) => cfg.match.test(r.trackName ?? '')) ?? results[0];
+  if (!app) return null;
+
+  let icon;
+  const iconUrl = app.artworkUrl512 ?? app.artworkUrl100;
+  if (iconUrl) {
+    mkdirSync(dir, { recursive: true });
+    const buf = Buffer.from(await (await get(iconUrl)).arrayBuffer());
+    writeFileSync(join(dir, 'icon.png'), buf);
+    icon = `/audit/${slug}/icon.png`;
+  }
+  return { app, icon };
+}
+
 // ---- 1. artefact-sourced apps -------------------------------------------
 let matrix = null;
 try {
@@ -70,17 +98,34 @@ if (matrix) {
   for (const [page, appSlug] of Object.entries(FROM_ARTEFACT)) {
     const screens = matrix.filter((s) => s.app === appSlug);
     if (!screens.length) continue;
+    let meta = null;
+    if (STORE_LOOKUP[page]) {
+      try {
+        meta = await storeMeta(page, STORE_LOOKUP[page], join(OUT_IMG, page));
+      } catch (err) {
+        console.warn(`  ${page}: store lookup failed — ${err.message}`);
+      }
+    }
+
     galleries[page] = {
       name: screens[0].appName,
+      seller: meta?.app?.sellerName,
       source: 'SCBX Screen Estate artefact',
+      storeUrl: meta?.app?.trackViewUrl,
+      icon: meta?.icon,
       kind: 'mixed',
+      rating: meta ? Math.round((meta.app.averageUserRating ?? 0) * 100) / 100 : undefined,
+      ratingCount: meta?.app?.userRatingCount,
       screens: screens.map((s) => ({
         src: s.src,
         caption: s.description,
         archetype: s.archetype,
       })),
     };
-    console.log(`  ${page}: ${screens.length} screens from the artefact`);
+    console.log(
+      `  ${page}: ${screens.length} screens from the artefact` +
+        (meta ? ` · icon + iOS ${galleries[page].rating}★` : '')
+    );
   }
 }
 
@@ -105,6 +150,14 @@ for (const [page, cfg] of Object.entries(FROM_STORE)) {
 
     const dir = join(OUT_IMG, page);
     mkdirSync(dir, { recursive: true });
+
+    let icon;
+    const iconUrl = app.artworkUrl512 ?? app.artworkUrl100;
+    if (iconUrl) {
+      writeFileSync(join(dir, 'icon.png'), Buffer.from(await (await get(iconUrl)).arrayBuffer()));
+      icon = `/audit/${page}/icon.png`;
+    }
+
     const screens = [];
     const shots = (app.screenshotUrls ?? []).slice(0, MAX_STORE_SHOTS);
 
@@ -124,6 +177,7 @@ for (const [page, cfg] of Object.entries(FROM_STORE)) {
       seller: app.sellerName,
       source: `Apple App Store (${cfg.country.toUpperCase()})`,
       storeUrl: app.trackViewUrl,
+      icon,
       kind: 'store',
       rating: Math.round((app.averageUserRating ?? 0) * 100) / 100,
       ratingCount: app.userRatingCount ?? 0,
@@ -157,6 +211,7 @@ export interface Gallery {
   seller?: string;
   source: string;
   storeUrl?: string;
+  icon?: string;
   kind: 'mixed' | 'store';
   rating?: number;
   ratingCount?: number;
