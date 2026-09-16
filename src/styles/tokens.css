@@ -87,7 +87,15 @@
 }
 
 html {
-  scroll-padding-top: calc(var(--c-header-height) + var(--p-space-04));
+  /* Clear the fixed header and the sticky section nav when jumping to an anchor. */
+  scroll-padding-top: calc(var(--c-header-height) + 3.25rem + var(--p-space-04));
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {

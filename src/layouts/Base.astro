@@ -4,14 +4,12 @@ import { getCollection } from 'astro:content';
 
 interface Props {
   title: string;
-  /** Tab label shown above the content. */
-  tab?: string;
   intro?: string;
   /** Overview pages render a banner; artefact pages do not. */
   banner?: boolean;
 }
 
-const { title, tab, intro, banner = false } = Astro.props;
+const { title, intro, banner = false } = Astro.props;
 const here = Astro.url.pathname.replace(/\/$/, '');
 
 const entries = await getCollection('research');
@@ -149,15 +147,10 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
       </nav>
 
       <div class="body">
-        {
-          tab && (
-            <div class="tabs">
-              <span class="tab" aria-current="page">
-                {tab}
-              </span>
-            </div>
-          )
-        }
+        {/* Populated from the page's own section headings. */}
+        <nav class="tabs" data-tabs aria-label="On this page" hidden>
+          <ul data-tablist />
+        </nav>
 
         {banner && <div class="banner" role="presentation" />}
 
@@ -175,6 +168,89 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         </footer>
       </div>
     </div>
+
+
+    <script>
+      /**
+       * Section navigation, built from the page's own <h2> headings.
+       *
+       * Generated at runtime rather than hand-listed, so it cannot drift from
+       * the content — which matters most on artefact pages, where the headings
+       * come from markdown in product-context.
+       */
+      const strip = document.querySelector<HTMLElement>('[data-tabs]');
+      const list = document.querySelector<HTMLElement>('[data-tablist]');
+      const main = document.getElementById('main');
+
+      if (strip && list && main) {
+        const slug = (text: string) =>
+          text
+            .toLowerCase()
+            .trim()
+            .replace(/[^\p{L}\p{N}]+/gu, '-')
+            .replace(/^-+|-+$/g, '');
+
+        const headings = [...main.querySelectorAll<HTMLElement>('h2')];
+
+        if (headings.length > 1) {
+          strip.hidden = false;
+
+          headings.forEach((h) => {
+            if (!h.id) h.id = slug(h.textContent ?? '');
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = `#${h.id}`;
+            a.textContent = h.textContent;
+            a.dataset.for = h.id;
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+
+          const links = [...list.querySelectorAll<HTMLAnchorElement>('a')];
+
+          const mark = (id: string) => {
+            links.forEach((a) => {
+              const on = a.dataset.for === id;
+              a.setAttribute('aria-current', on ? 'true' : 'false');
+              // Keep the active tab in view when the strip overflows. Scroll the
+              // strip itself, never the page — scrollIntoView would fight the
+              // page scroll that triggered this.
+              if (on && strip.scrollWidth > strip.clientWidth) {
+                strip.scrollTo({
+                  left: a.offsetLeft - strip.clientWidth / 2 + a.clientWidth / 2,
+                  behavior: 'smooth',
+                });
+              }
+            });
+          };
+
+          // The active section is the last heading that has passed the line just
+          // below the sticky chrome.
+          let queued = false;
+          const track = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => {
+              queued = false;
+              // Match html{scroll-padding-top}, which parks an anchored heading
+              // just below the sticky chrome. A threshold above that landing
+              // point marks the previous section active — off by one.
+              const line = strip.getBoundingClientRect().bottom + 28;
+              let active = headings[0];
+              for (const h of headings) {
+                if (h.getBoundingClientRect().top <= line) active = h;
+                else break;
+              }
+              mark(active.id);
+            });
+          };
+
+          window.addEventListener('scroll', track, { passive: true });
+          window.addEventListener('resize', track);
+          track();
+        }
+      }
+    </script>
 
     <style>
       .skip {
@@ -318,16 +394,44 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         font-size: 0.8125rem;
       }
 
-      /* ---------- tab strip ---------- */
+      /* ---------- section navigation ---------- */
       .tabs {
+        position: sticky;
+        top: var(--c-header-height);
+        z-index: 40;
+        background: var(--s-background);
         border-bottom: 1px solid var(--s-border-subtle);
-        padding: 0 var(--p-space-06);
+        overflow-x: auto;
+        scrollbar-width: none;
       }
-      .tab {
-        display: inline-block;
-        padding: var(--p-space-04) var(--p-space-02);
-        border-bottom: 2px solid var(--s-brand);
-        font-weight: 500;
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      /* These nodes are created at runtime, so they carry no Astro scope
+         attribute — the selectors must be global to reach them. */
+      .tabs :global(ul) {
+        display: flex;
+        gap: var(--p-space-05);
+        list-style: none;
+        margin: 0;
+        padding: 0 var(--p-space-06);
+        white-space: nowrap;
+      }
+      .tabs :global(a) {
+        display: block;
+        padding: var(--p-space-04) 0;
+        color: var(--s-text-secondary);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        font-size: 0.875rem;
+      }
+      .tabs :global(a:hover) {
+        color: var(--s-text-primary);
+      }
+      .tabs :global(a[aria-current='true']) {
+        color: var(--s-brand-strong);
+        border-bottom-color: var(--s-brand);
+        font-weight: 600;
       }
 
       /* ---------- banner ---------- */
