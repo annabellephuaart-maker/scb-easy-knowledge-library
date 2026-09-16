@@ -48,7 +48,7 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title} · SCB Easy Reference Library</title>
+    <title>{title} · SCB Easy Knowledge Library</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -60,7 +60,7 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
     <a href="#main" class="skip">Skip to main content</a>
 
     <header class="hdr">
-      <a class="hdr-name" href="/">SCB Easy Reference Library</a>
+      <a class="hdr-name" href="/">SCB Easy Knowledge Library</a>
     </header>
 
     <div class="shell">
@@ -77,41 +77,31 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         <section class="grp">
           <h2>Research</h2>
 
-          {
-            unfiled.length > 0 && (
-              <details open={unfiled.some((e) => here === `/${e.id}`)}>
-                <summary>Study</summary>
-                <ul>
-                  {unfiled.map((item) => (
-                    <li>
-                      <a
-                        href={`/${item.id}`}
-                        aria-current={here === `/${item.id}` ? 'page' : undefined}
-                      >
-                        {item.data.name ?? item.data.title ?? item.id}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )
-          }
+          {/* Flat while the research is small — no accordions to open first. */}
+          <ul class="flat">
+            {unfiled.map((item) => (
+              <li>
+                <a
+                  href={`/${item.id}`}
+                  aria-current={here === `/${item.id}` ? 'page' : undefined}
+                >
+                  {item.data.name ?? item.data.title ?? item.id}
+                </a>
+              </li>
+            ))}
+          </ul>
 
           {
             streams.map(({ scope, label, evidence }) => (
-              <details
-                open={
-                  here.startsWith(`/${scope.id}`) || evidence.some((e) => here === `/${e.id}`)
-                }
-              >
-                <summary>{label}</summary>
+              <div class="stream">
+                <p class="stream-name">{label}</p>
                 <ul>
                   <li>
                     <a
                       href={`/${scope.id}`}
                       aria-current={here === `/${scope.id}` ? 'page' : undefined}
                     >
-                      Scope &amp; questions
+                      Plan Overview
                     </a>
                   </li>
                   {evidence.map((item) => (
@@ -124,9 +114,8 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
                       </a>
                     </li>
                   ))}
-                  {evidence.length === 0 && <li class="note">No evidence filed yet.</li>}
                 </ul>
-              </details>
+              </div>
             ))
           }
         </section>
@@ -339,9 +328,19 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         font-weight: 600;
       }
 
-      /* Items nested under a collapsible sit under its label, not its chevron. */
-      .sidenav details ul li a {
+      /* Items nested under a label sit indented from it. */
+      .sidenav details ul li a,
+      .sidenav .stream ul li a {
         padding-left: var(--p-space-06);
+      }
+
+      .sidenav .stream {
+        margin-top: var(--p-space-03);
+      }
+      .sidenav .stream-name {
+        margin: 0 0 var(--p-space-01);
+        padding: var(--p-space-02) var(--p-space-03);
+        color: var(--s-text-primary);
       }
       .sidenav .flat li a {
         padding-left: var(--p-space-03);
