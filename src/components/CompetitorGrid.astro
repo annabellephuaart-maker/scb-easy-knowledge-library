@@ -5,8 +5,9 @@ import { competitorApps } from '../data/competitor-apps';
 <div class="controls">
   <span id="csort-label">Sort by</span>
   <div class="seg" role="group" aria-labelledby="csort-label">
-    <button type="button" data-csort="rating" aria-pressed="true">Rating</button>
-    <button type="button" data-csort="ratings" aria-pressed="false">Ratings count</button>
+    <button type="button" data-csort="installs" aria-pressed="true">Most downloads</button>
+    <button type="button" data-csort="rating" aria-pressed="false">Highest rating</button>
+    <button type="button" data-csort="category" aria-pressed="false">Category</button>
   </div>
 </div>
 
@@ -16,7 +17,8 @@ import { competitorApps } from '../data/competitor-apps';
       <li
         class:list={['app', { us: app.isUs }]}
         data-rating={app.rating}
-        data-ratings={app.ratingCount}
+        data-installs={app.installsRank}
+        data-category={app.categoryRank}
       >
         {app.shots[0] && (
           <figure class="shot">
@@ -41,21 +43,23 @@ import { competitorApps } from '../data/competitor-apps';
 
         <dl class="app-meta">
           <div>
-            <dt>Rating</dt>
+            <dt>Installs</dt>
+            <dd>{app.installs}</dd>
+          </div>
+          <div>
+            <dt>iOS</dt>
             <dd>{app.rating.toFixed(2)}★</dd>
           </div>
           <div>
-            <dt>Ratings</dt>
-            <dd>{app.ratingCount.toLocaleString('en-GB')}</dd>
-          </div>
-          <div>
-            <dt>Updated</dt>
-            <dd>{app.updated}</dd>
+            <dt>Play</dt>
+            <dd>{app.playRating.toFixed(1)}★</dd>
           </div>
         </dl>
 
         <p class="app-link">
-          <a href={app.storeUrl} rel="noreferrer">View on the App Store</a>
+          <a href={app.storeUrl} rel="noreferrer">App Store</a>
+          <span aria-hidden="true"> · </span>
+          <a href={app.playUrl} rel="noreferrer">Play</a>
         </p>
       </li>
     ))
@@ -63,9 +67,12 @@ import { competitorApps } from '../data/competitor-apps';
 </ul>
 
 <p class="src">
-  Screenshots and figures from the Apple App Store, Thailand storefront, retrieved
-  2026-09-17 via the public iTunes Lookup API. iOS only — Google Play ratings are not
-  comparable.
+  Screenshots and iOS figures from the Apple App Store (TH) via the public iTunes Lookup
+  API; install bands and Play ratings from the Google Play listing (TH). Both retrieved
+  2026-09-17. <strong>Sorting by rating uses the iOS figure</strong>, which is the
+  like-for-like one — ratings are not comparable across stores. Install bands are lifetime
+  cumulative and count reinstalls; they are not users. Category is the competitive tier, so
+  it does nothing while every app here is domestic.
 </p>
 
 <script>
@@ -75,13 +82,17 @@ import { competitorApps } from '../data/competitor-apps';
     const items = [...grid.children] as HTMLElement[];
     const sort = (key: string) => {
       const get = (el: HTMLElement) => Number(el.dataset[key] ?? 0);
-      [...items].sort((a, b) => get(b) - get(a)).forEach((el) => grid.appendChild(el));
+      // Category ascends to keep tier order; the rest descend.
+      const ordered = [...items].sort((a, b) =>
+        key === 'category' ? get(a) - get(b) || Number(b.dataset.installs) - Number(a.dataset.installs) : get(b) - get(a)
+      );
+      ordered.forEach((el) => grid.appendChild(el));
       buttons.forEach((b) =>
         b.setAttribute('aria-pressed', String(b.dataset.csort === key))
       );
     };
     buttons.forEach((b) => b.addEventListener('click', () => sort(b.dataset.csort ?? '')));
-    sort('rating');
+    sort('installs');
   }
 </script>
 

@@ -1,13 +1,16 @@
 /**
- * Thai retail banking apps, from the Apple App Store (TH storefront).
+ * Thai retail banking apps, from the Apple App Store and Google Play (TH).
  *
  * GENERATED from the iTunes Lookup API on 2026-09-17 — do not hand-edit.
  * Ratings are lifetime cumulative and move continuously; re-generate rather
  * than editing a number in place.
  *
- * iOS only. Google Play has no equivalent public API, and its ratings are NOT
- * comparable — SCB EASY rates 3.4 here and 4.3 on Play. Compare within a
- * store, never across them.
+ * Play install bands and ratings were read from the public store listing on the
+ * same date. Ratings are NOT comparable across stores — every app here rates
+ * 4.3-4.7 on Play and 3.40-3.92 on iOS. Compare within a store, never across.
+ *
+ * Install bands are lifetime cumulative and count reinstalls and second
+ * devices. They are not users and definitely not active users.
  */
 
 export interface CompetitorApp {
@@ -23,11 +26,25 @@ export interface CompetitorApp {
   icon: string;
   shots: string[];
   isUs?: boolean;
+  /** Google Play, TH — lifetime install band, crude but the only public download figure. */
+  installs: string;
+  installsRank: number;
+  playRating: number;
+  playUrl: string;
+  /** Competitive tier, per the competitive analysis stream. */
+  category: string;
+  categoryRank: number;
 }
 
 export const competitorApps: CompetitorApp[] = [
   {
     slug: "scb-easy",
+    installs: "10M+",
+    installsRank: 10000000,
+    playRating: 4.3,
+    playUrl: "https://play.google.com/store/apps/details?id=com.scb.phone",
+    category: "Domestic",
+    categoryRank: 1,
     name: "SCB EASY",
     seller: "The Siam Commercial Bank PCL",
     rating: 3.4,
@@ -42,6 +59,12 @@ export const competitorApps: CompetitorApp[] = [
   },
   {
     slug: "k-plus",
+    installs: "50M+",
+    installsRank: 50000000,
+    playRating: 4.7,
+    playUrl: "https://play.google.com/store/apps/details?id=com.kasikorn.retail.mbanking.wap",
+    category: "Domestic",
+    categoryRank: 1,
     name: "K PLUS",
     seller: "KASIKORNBANK PUBLIC COMPANY LIMITED",
     rating: 3.68,
@@ -55,6 +78,12 @@ export const competitorApps: CompetitorApp[] = [
   },
   {
     slug: "bangkok-bank",
+    installs: "10M+",
+    installsRank: 10000000,
+    playRating: 4.4,
+    playUrl: "https://play.google.com/store/apps/details?id=com.bbl.mobilebanking",
+    category: "Domestic",
+    categoryRank: 1,
     name: "Bangkok Bank Mobile Banking",
     seller: "Bangkok Bank Public Company Limited",
     rating: 3.92,
@@ -68,6 +97,12 @@ export const competitorApps: CompetitorApp[] = [
   },
   {
     slug: "ttb-touch",
+    installs: "10M+",
+    installsRank: 10000000,
+    playRating: 4.6,
+    playUrl: "https://play.google.com/store/apps/details?id=com.TMBTOUCH.PRODUCTION",
+    category: "Domestic",
+    categoryRank: 1,
     name: "ttb touch",
     seller: "TMBThanachart Bank Public Company Limited",
     rating: 3.61,
@@ -81,6 +116,12 @@ export const competitorApps: CompetitorApp[] = [
   },
   {
     slug: "krungthai-next",
+    installs: "50M+",
+    installsRank: 50000000,
+    playRating: 4.3,
+    playUrl: "https://play.google.com/store/apps/details?id=ktbcs.netbank",
+    category: "Domestic",
+    categoryRank: 1,
     name: "Krungthai NEXT",
     seller: "Krung Thai Bank",
     rating: 3.41,
