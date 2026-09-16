@@ -16,15 +16,29 @@ const here = Astro.url.pathname.replace(/\/$/, '');
 
 const entries = await getCollection('research');
 
-const studies = new Map<string, { label: string; items: typeof entries }>();
-for (const entry of entries) {
-  const [dir] = entry.id.split('/').slice(1, 2);
-  const key = dir ?? 'unfiled';
-  if (!studies.has(key)) {
-    studies.set(key, { label: key.replace(/_/g, ' · '), items: [] });
-  }
-  studies.get(key)!.items.push(entry);
-}
+/**
+ * The navigation follows the study's evidence streams, not the folder layout.
+ * Stream membership and order come from the artefacts' own frontmatter, so the
+ * research owns the structure and this file merely renders it.
+ */
+const streamScopes = entries
+  .filter((e) => e.data.artefact_type === 'stream-scope')
+  .sort((a, b) => (a.data.stream_order ?? 99) - (b.data.stream_order ?? 99));
+
+const streams = streamScopes.map((scope) => ({
+  scope,
+  label: scope.data.name ?? scope.data.workstream ?? scope.id,
+  evidence: entries.filter(
+    (e) =>
+      e.data.artefact_type !== 'stream-scope' &&
+      e.data.workstream === scope.data.workstream
+  ),
+}));
+
+// Study-level artefacts, and anything not yet filed to a stream.
+const unfiled = entries.filter(
+  (e) => e.data.artefact_type !== 'stream-scope' && !e.data.workstream
+);
 
 // Phase two. Listed so the shape of the library is visible, marked absent
 // rather than linked to pages that do not exist.
@@ -62,28 +76,57 @@ const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guideline
           </ul>
         </details>
 
-        <details open>
-          <summary>Research</summary>
-          {
-            [...studies.values()].map((study) => (
-              <>
-                <p class="group">{study.label}</p>
-                <ul>
-                  {study.items.map((item) => (
-                    <li>
-                      <a
-                        href={`/${item.id}`}
-                        aria-current={here === `/${item.id}` ? 'page' : undefined}
-                      >
-                        {item.data.name ?? item.data.title ?? item.id}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ))
-          }
-        </details>
+        {
+          streams.map(({ scope, label, evidence }, i) => (
+            <details open={here.startsWith(`/${scope.id}`) || evidence.some((e) => here === `/${e.id}`)}>
+              <summary>
+                <span class="n">{i + 1}</span>
+                {label}
+              </summary>
+              <ul>
+                <li>
+                  <a
+                    href={`/${scope.id}`}
+                    aria-current={here === `/${scope.id}` ? 'page' : undefined}
+                  >
+                    Scope &amp; questions
+                  </a>
+                </li>
+                {evidence.map((item) => (
+                  <li>
+                    <a
+                      href={`/${item.id}`}
+                      aria-current={here === `/${item.id}` ? 'page' : undefined}
+                    >
+                      {item.data.name ?? item.data.title ?? item.id}
+                    </a>
+                  </li>
+                ))}
+                {evidence.length === 0 && <li class="note">No evidence filed yet.</li>}
+              </ul>
+            </details>
+          ))
+        }
+
+        {
+          unfiled.length > 0 && (
+            <details open>
+              <summary>Study</summary>
+              <ul>
+                {unfiled.map((item) => (
+                  <li>
+                    <a
+                      href={`/${item.id}`}
+                      aria-current={here === `/${item.id}` ? 'page' : undefined}
+                    >
+                      {item.data.name ?? item.data.title ?? item.id}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )
+        }
 
         {
           deferred.map((section) => (
@@ -236,7 +279,21 @@ const deferred = ['Developing', 'Elements', 'Components', 'Patterns', 'Guideline
         color: var(--s-brand-strong);
         font-weight: 600;
       }
-      .sidenav .group {
+      .sidenav .n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--s-selected-ui);
+    color: var(--s-brand-strong);
+    font-family: var(--s-font-mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+  }
+  .sidenav .group {
         margin: var(--p-space-03) 0 var(--p-space-01);
         padding: 0 var(--p-space-04);
         font-family: var(--s-font-mono);

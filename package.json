@@ -3,11 +3,12 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
-  "description": "Internal reference site — generated from product-context. Never hand-maintained.",
+  "description": "Internal reference site \u2014 generated from product-context. Never hand-maintained.",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "build": "node scripts/check-tokens.mjs && astro build",
+    "preview": "astro preview",
+    "lint:tokens": "node scripts/check-tokens.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",

@@ -19,6 +19,11 @@ const research = defineCollection({
       title: z.string().optional(),
       status: z.string().optional(),
       study: z.string().optional(),
+      /** Which evidence stream this artefact belongs to. */
+      workstream: z.string().optional(),
+      stream_order: z.number().optional(),
+      artefact_type: z.string().optional(),
+      question: z.string().optional(),
       input_type: z.string().optional(),
       source_mode: z.string().optional(),
       evidence_quality: z.string().optional(),
