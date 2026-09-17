@@ -8,7 +8,8 @@
     "dev": "astro dev",
     "build": "node scripts/check-tokens.mjs && astro build",
     "preview": "astro preview",
-    "lint:tokens": "node scripts/check-tokens.mjs"
+    "lint:tokens": "node scripts/check-tokens.mjs",
+    "deploy": "npm run build && wrangler pages deploy dist"
   },
   "dependencies": {
     "astro": "^5.0.0",
