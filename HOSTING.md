@@ -2,15 +2,27 @@
 
 Two ways, depending on whether colleagues need a folder or a URL.
 
-## The simple one: a folder in Box
+## The simple one: publish into Box
+
+The workspace already lives in Box, so **there is nothing to upload**. Box syncs the
+filesystem; publishing just means putting the built site where colleagues can find it.
 
 ```bash
-npm run build:folder
+npm run publish
 ```
 
-That builds the site, rewrites it to work without a server, and zips it as
-`scb-easy-knowledge-library-<date>.zip` (~14 MB). Upload that to Box. Colleagues
-unzip and double-click `dist/index.html`.
+That builds, rewrites the output to work without a server, and copies it to
+
+```
+SCB Easy/AI Folder/Knowledge Library/index.html
+```
+
+beside the project rather than buried in `product-codebase/dist`, which is git-ignored and
+not somewhere anyone would look. Colleagues open that file from their own Box sync. Re-run it
+after changing research and they get the update when Box syncs — nobody downloads anything.
+
+A `READ ME FIRST.txt` goes in alongside, with the publish date and a short note on how to
+read the confidence markers.
 
 **Box is the access control**, which is a better arrangement than it sounds: per-person
 permissions, revocable, with a record of who opened what. A shared site password gives you
@@ -34,9 +46,9 @@ system fonts, which changes how Thai text is set but not whether it reads.
 
 ### The honest limitation
 
-**Every colleague holds a copy, and copies go stale.** There is no way to update what someone
-has already downloaded. The zip is date-stamped so at least the staleness is visible. If the
-library is changing daily, a URL is the better answer.
+**A colleague reading it while you re-publish may see a half-synced state**, since the target
+folder is replaced wholesale. It resolves itself once Box finishes. Publish when nobody is
+mid-read if that matters.
 
 ## The other one: a private URL
 
