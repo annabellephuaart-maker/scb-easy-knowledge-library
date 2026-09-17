@@ -9,7 +9,8 @@
     "build": "node scripts/check-tokens.mjs && astro build",
     "preview": "astro preview",
     "lint:tokens": "node scripts/check-tokens.mjs",
-    "deploy": "npm run build && wrangler pages deploy dist"
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "build:folder": "npm run build && node scripts/make-portable.mjs dist && node scripts/zip-folder.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",
