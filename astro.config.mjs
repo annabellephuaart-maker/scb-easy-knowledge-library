@@ -6,6 +6,15 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   srcDir: './src',
   outDir: './dist',
+  build: {
+    // Inline every stylesheet into the page that uses it.
+    //
+    // The published build is opened from a folder, and in some viewers — Box's
+    // web preview among them — a page is sandboxed and cannot load sibling
+    // files. An external stylesheet then silently fails and the page renders
+    // unstyled. Inlining removes the dependency; each page carries its own CSS.
+    inlineStylesheets: 'always',
+  },
   vite: {
     server: {
       fs: {
