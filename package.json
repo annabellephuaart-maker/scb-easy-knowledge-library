@@ -9,12 +9,15 @@
     "build": "node scripts/check-tokens.mjs && astro build",
     "preview": "astro preview",
     "lint:tokens": "node scripts/check-tokens.mjs",
-    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=scb-easy-knowledge-library",
     "publish": "npm run build && node scripts/make-portable.mjs dist && node scripts/publish-library.mjs",
     "package": "npm run publish && node scripts/package-library.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",
     "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "wrangler": "^4.136.3"
   }
 }

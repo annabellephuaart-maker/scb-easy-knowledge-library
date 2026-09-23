@@ -22,15 +22,16 @@ const DIST = 'dist';
 /**
  * Two destinations, written together from one build so they cannot drift.
  *
- *  library/            inside the repo, tracked by git. This is what colleagues
- *                      download from GitHub, and what GitHub Desktop shows as
- *                      changes to commit.
+ *  docs/               inside the repo, tracked by git. Named `docs` because
+ *                      that is one of only two folders GitHub Pages can serve
+ *                      from — the other being the repo root. Also what GitHub
+ *                      Desktop shows as changes to commit.
  *  ../../Knowledge Library/   beside the project in Box, for anyone who reaches
  *                      the work through Box rather than GitHub.
  */
 const TARGETS = process.argv[2]
   ? [resolve(process.argv[2])]
-  : [resolve('library'), resolve('..', '..', 'Knowledge Library')];
+  : [resolve('docs'), resolve('..', '..', 'Knowledge Library')];
 
 if (!existsSync(DIST)) {
   console.error('publish-library: no dist/ — run `npm run build` first');
@@ -79,6 +80,7 @@ console.log(`publish-library: published to ${TARGET}`);
 }
 
 console.log('');
-console.log('  GitHub: commit and push in GitHub Desktop, then colleagues open the');
-console.log('          repo, click library/, and download or view index.html');
+console.log('  GitHub: commit and push in GitHub Desktop.');
+console.log('          With Pages enabled (Settings -> Pages -> main / docs) this is');
+console.log('          live at https://<user>.github.io/<repo>/ — needs a PUBLIC repo.');
 console.log('  Box:    colleagues open "AI Folder/Knowledge Library/index.html"');
