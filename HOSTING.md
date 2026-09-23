@@ -24,6 +24,21 @@ after changing research and they get the update when Box syncs — nobody downlo
 A `READ ME FIRST.txt` goes in alongside, with the publish date and a short note on how to
 read the confidence markers.
 
+### Sending it to someone outside the Box folder
+
+```bash
+npm run package
+```
+
+Produces `SCB Easy Knowledge Library <date>.zip` beside the library. Send the **whole zip**.
+
+**Never send a single .html file.** The library is 39 separate pages plus its images. A
+recipient who gets one file sees the first page and a dead link on every navigation, because
+the other pages are not on their machine. This is the most likely thing to go wrong when
+sharing, and the error looks like a broken site rather than a missing folder.
+
+Tell recipients: unzip first, then open `index.html` inside the unzipped folder.
+
 **Box is the access control**, which is a better arrangement than it sounds: per-person
 permissions, revocable, with a record of who opened what. A shared site password gives you
 none of that.
