@@ -11,7 +11,8 @@
     "lint:tokens": "node scripts/check-tokens.mjs",
     "deploy": "npm run build && wrangler pages deploy dist",
     "publish": "npm run build && node scripts/make-portable.mjs dist && node scripts/publish-library.mjs",
-    "package": "npm run publish && node scripts/package-library.mjs"
+    "package": "npm run publish && node scripts/package-library.mjs",
+    "share": "npm run publish && node scripts/deploy-pages.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",
