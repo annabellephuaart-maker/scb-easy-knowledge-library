@@ -47,6 +47,12 @@ rmSync(TARGET, { recursive: true, force: true });
 mkdirSync(TARGET, { recursive: true });
 cpSync(DIST, TARGET, { recursive: true });
 
+// GitHub Pages runs Jekyll by default, which silently drops any file or
+// folder whose name starts with an underscore. Astro emits `_astro/` whenever
+// an asset is not inlined, so this guards against a future build losing its
+// styles for a reason nobody would think to look for.
+writeFileSync(join(TARGET, '.nojekyll'), '');
+
 writeFileSync(
   join(TARGET, 'READ ME FIRST.txt'),
   `SCB Easy Knowledge Library
