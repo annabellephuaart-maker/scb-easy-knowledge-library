@@ -141,16 +141,23 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
                     {evidence.map(({ entry: item, children }) =>
                       children.length ? (
                         <li class="sub">
+                          {/* The summary toggles and nothing else. A link inside
+                              a summary is invalid and browsers disagree on
+                              whether a click navigates or opens — so the group's
+                              own page is the first item instead, matching how a
+                              stream exposes its Plan Overview. */}
                           <details open={children.some((c) => here === `/${c.id}`) || here === `/${item.id}`}>
-                            <summary>
-                              <a
-                                href={`/${item.id}`}
-                                aria-current={here === `/${item.id}` ? 'page' : undefined}
-                              >
-                                {item.data.name ?? item.data.title ?? item.id}
-                              </a>
-                            </summary>
+                            <summary>{item.data.name ?? item.data.title ?? item.id}</summary>
                             <ul>
+                              <li>
+                                <a
+                                  class="child"
+                                  href={`/${item.id}`}
+                                  aria-current={here === `/${item.id}` ? 'page' : undefined}
+                                >
+                                  Overview
+                                </a>
+                              </li>
                               {children.map((child) => (
                                 <li>
                                   <a
@@ -515,15 +522,6 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
       }
       .sidenav li.sub > details[open] > summary {
         font-weight: 600;
-      }
-      .sidenav li.sub summary a {
-        padding: 0;
-        color: inherit;
-        background: none;
-      }
-      .sidenav li.sub summary a[aria-current='page'] {
-        color: var(--s-brand-strong);
-        background: none;
       }
       .sidenav li.sub ul li a {
         padding-left: var(--p-space-08);
