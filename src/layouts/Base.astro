@@ -74,11 +74,21 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
     <a href="#main" class="skip">Skip to main content</a>
 
     <header class="hdr">
+      <button
+        class="nav-toggle"
+        type="button"
+        data-nav-toggle
+        aria-expanded="false"
+        aria-controls="sidenav"
+      >
+        <span class="bars" aria-hidden="true"></span>
+        <span class="sr">Sections</span>
+      </button>
       <a class="hdr-name" href="/">SCB Easy Knowledge Library</a>
     </header>
 
     <div class="shell">
-      <nav class="sidenav" aria-label="Primary">
+      <nav class="sidenav" id="sidenav" aria-label="Primary">
         <section class="grp">
           <h2>About this Library</h2>
           <ul class="flat">
@@ -106,48 +116,74 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
           </ul>
 
           {
-            streams.map(({ scope, label, evidence }) => (
-              <div class="stream">
-                <p class="stream-name">{label}</p>
-                <ul>
-                  <li>
-                    <a
-                      href={`/${scope.id}`}
-                      aria-current={here === `/${scope.id}` ? 'page' : undefined}
-                    >
-                      Plan Overview
-                    </a>
-                  </li>
-                  {evidence.map(({ entry: item, children }) => (
-                    <>
-                      <li>
-                        <a
-                          href={`/${item.id}`}
-                          class={item.data.status === 'retired' ? 'retired' : undefined}
-                          aria-current={here === `/${item.id}` ? 'page' : undefined}
-                        >
-                          {item.data.name ?? item.data.title ?? item.id}
-                        </a>
-                      </li>
-                      {children.map((child) => (
+            /* Each stream collapses. A section opens itself when the page being
+               read is inside it, so the reader never has to find their own
+               place after following a link. */
+            streams.map(({ scope, label, evidence }) => {
+              const inStream =
+                here === `/${scope.id}` ||
+                evidence.some(
+                  ({ entry: item, children }) =>
+                    here === `/${item.id}` || children.some((c) => here === `/${c.id}`)
+                );
+              return (
+                <details open={inStream}>
+                  <summary>{label}</summary>
+                  <ul>
+                    <li>
+                      <a
+                        href={`/${scope.id}`}
+                        aria-current={here === `/${scope.id}` ? 'page' : undefined}
+                      >
+                        Plan Overview
+                      </a>
+                    </li>
+                    {evidence.map(({ entry: item, children }) =>
+                      children.length ? (
+                        <li class="sub">
+                          <details open={children.some((c) => here === `/${c.id}`) || here === `/${item.id}`}>
+                            <summary>
+                              <a
+                                href={`/${item.id}`}
+                                aria-current={here === `/${item.id}` ? 'page' : undefined}
+                              >
+                                {item.data.name ?? item.data.title ?? item.id}
+                              </a>
+                            </summary>
+                            <ul>
+                              {children.map((child) => (
+                                <li>
+                                  <a
+                                    class:list={[
+                                      'child',
+                                      { retired: child.data.status === 'retired' },
+                                    ]}
+                                    href={`/${child.id}`}
+                                    aria-current={here === `/${child.id}` ? 'page' : undefined}
+                                  >
+                                    {child.data.name ?? child.data.title ?? child.id}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        </li>
+                      ) : (
                         <li>
                           <a
-                            class:list={[
-                              'child',
-                              { retired: child.data.status === 'retired' },
-                            ]}
-                            href={`/${child.id}`}
-                            aria-current={here === `/${child.id}` ? 'page' : undefined}
+                            href={`/${item.id}`}
+                            class={item.data.status === 'retired' ? 'retired' : undefined}
+                            aria-current={here === `/${item.id}` ? 'page' : undefined}
                           >
-                            {child.data.name ?? child.data.title ?? child.id}
+                            {item.data.name ?? item.data.title ?? item.id}
                           </a>
                         </li>
-                      ))}
-                    </>
-                  ))}
-                </ul>
-              </div>
-            ))
+                      )
+                    )}
+                  </ul>
+                </details>
+              );
+            })
           }
         </section>
 
@@ -200,6 +236,18 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
        *
        * Saved on unload, restored before paint so there is no visible jump.
        */
+      // Mobile: the nav is hidden until asked for.
+      const navToggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+      const nav = document.getElementById('sidenav');
+      if (navToggle && nav) {
+        navToggle.addEventListener('click', () => {
+          const open = nav.hasAttribute('data-open');
+          if (open) nav.removeAttribute('data-open');
+          else nav.setAttribute('data-open', '');
+          navToggle.setAttribute('aria-expanded', String(!open));
+        });
+      }
+
       const SIDENAV_KEY = 'sidenav-scroll';
       const sidenav = document.querySelector<HTMLElement>('.sidenav');
       if (sidenav) {
@@ -307,9 +355,54 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
     </script>
 
     <style>
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
       .skip {
         position: absolute;
         left: -9999px;
+      }
+
+      /* Desktop shows the nav permanently; the toggle only exists on narrow
+         screens, where the nav would otherwise push the page down. */
+      .nav-toggle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-left: var(--p-space-03);
+        background: none;
+        border: 1px solid var(--s-border-subtle);
+        border-radius: var(--c-radius);
+        cursor: pointer;
+      }
+      .nav-toggle .bars,
+      .nav-toggle .bars::before,
+      .nav-toggle .bars::after {
+        display: block;
+        width: 1rem;
+        height: 2px;
+        background: var(--s-text-primary);
+        border-radius: 1px;
+      }
+      .nav-toggle .bars {
+        position: relative;
+      }
+      .nav-toggle .bars::before,
+      .nav-toggle .bars::after {
+        content: '';
+        position: absolute;
+      }
+      .nav-toggle .bars::before {
+        top: -5px;
+      }
+      .nav-toggle .bars::after {
+        top: 5px;
       }
       .skip:focus {
         left: 0;
@@ -411,13 +504,29 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         text-decoration: line-through;
         text-decoration-thickness: 1px;
       }
-      .sidenav .stream {
-        margin-top: var(--p-space-03);
+      /* A group nested inside a stream — its summary carries a link, so the
+         label navigates while the chevron only opens. */
+      .sidenav li.sub {
+        list-style: none;
       }
-      .sidenav .stream-name {
-        margin: 0 0 var(--p-space-01);
-        padding: var(--p-space-02) var(--p-space-03);
-        color: var(--s-text-primary);
+      .sidenav li.sub > details > summary {
+        padding-left: var(--p-space-05);
+        font-weight: 400;
+      }
+      .sidenav li.sub > details[open] > summary {
+        font-weight: 600;
+      }
+      .sidenav li.sub summary a {
+        padding: 0;
+        color: inherit;
+        background: none;
+      }
+      .sidenav li.sub summary a[aria-current='page'] {
+        color: var(--s-brand-strong);
+        background: none;
+      }
+      .sidenav li.sub ul li a {
+        padding-left: var(--p-space-08);
       }
       .sidenav .flat li a {
         padding-left: var(--p-space-03);
@@ -592,11 +701,36 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         .shell {
           grid-template-columns: minmax(0, 1fr);
         }
+        .nav-toggle {
+          display: inline-flex;
+        }
+        /* Collapsed by default so the reader lands on the content, not on
+           forty navigation links. */
         .sidenav {
           position: static;
           height: auto;
           border-right: 0;
           border-bottom: 1px solid var(--s-border-subtle);
+          display: none;
+        }
+        .sidenav[data-open] {
+          display: block;
+        }
+        .content,
+        .foot {
+          padding: var(--p-space-05) var(--p-space-04);
+        }
+        .hero {
+          padding: var(--p-space-06) var(--p-space-04);
+        }
+        .tabs ul {
+          padding: 0 var(--p-space-04);
+        }
+        /* Wide tables scroll rather than forcing the page sideways. */
+        .content :global(table) {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
         }
       }
     </style>
