@@ -255,25 +255,32 @@ const designSystem = ['References', 'Elements', 'Components', 'Patterns'];
         });
       }
 
-      const SIDENAV_KEY = 'sidenav-scroll';
       const sidenav = document.querySelector<HTMLElement>('.sidenav');
       if (sidenav) {
-        const saved = sessionStorage.getItem(SIDENAV_KEY);
-        if (saved) sidenav.scrollTop = Number(saved) || 0;
-
-        const save = () => sessionStorage.setItem(SIDENAV_KEY, String(sidenav.scrollTop));
-        sidenav.addEventListener('scroll', save, { passive: true });
-        window.addEventListener('pagehide', save);
-
-        // If the active item is out of view — arriving from a link elsewhere,
-        // or a first visit — bring it into view instead of leaving it hidden.
+        /**
+         * Keep the current page visible in the nav — and nothing more.
+         *
+         * An earlier version stored the nav's scroll position and restored it
+         * on the next page. That misfired: the restored position belonged to
+         * the previous page, so the nav could arrive scrolled with its top
+         * cut off, which read as the section header vanishing.
+         *
+         * This is deterministic instead. If the current item is already
+         * visible, nothing moves — which covers stepping between siblings.
+         * If it is not, the nav scrolls the minimum needed to show it.
+         *
+         * The nav's own scrollTop is set rather than calling scrollIntoView,
+         * because that can scroll the page as well as the container.
+         */
         const current = sidenav.querySelector<HTMLElement>('[aria-current="page"]');
         if (current) {
           const navBox = sidenav.getBoundingClientRect();
           const itemBox = current.getBoundingClientRect();
-          if (itemBox.top < navBox.top || itemBox.bottom > navBox.bottom) {
-            current.scrollIntoView({ block: 'center' });
-            save();
+          const margin = 24;
+          if (itemBox.top < navBox.top + margin) {
+            sidenav.scrollTop -= navBox.top + margin - itemBox.top;
+          } else if (itemBox.bottom > navBox.bottom - margin) {
+            sidenav.scrollTop += itemBox.bottom - navBox.bottom + margin;
           }
         }
       }
