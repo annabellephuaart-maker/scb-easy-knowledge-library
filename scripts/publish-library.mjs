@@ -18,21 +18,34 @@ import { cpSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const DIST = 'dist';
-// product-codebase/../.. → the AI Folder that holds my-project
-const TARGET = process.argv[2] ?? resolve('..', '..', 'Knowledge Library');
+
+/**
+ * Two destinations, written together from one build so they cannot drift.
+ *
+ *  library/            inside the repo, tracked by git. This is what colleagues
+ *                      download from GitHub, and what GitHub Desktop shows as
+ *                      changes to commit.
+ *  ../../Knowledge Library/   beside the project in Box, for anyone who reaches
+ *                      the work through Box rather than GitHub.
+ */
+const TARGETS = process.argv[2]
+  ? [resolve(process.argv[2])]
+  : [resolve('library'), resolve('..', '..', 'Knowledge Library')];
 
 if (!existsSync(DIST)) {
   console.error('publish-library: no dist/ — run `npm run build` first');
   process.exit(1);
 }
 
+const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+for (const TARGET of TARGETS) {
 // Replace wholesale. A partial copy would leave pages that no longer exist,
 // and a stale page is worse than a missing one.
 rmSync(TARGET, { recursive: true, force: true });
 mkdirSync(TARGET, { recursive: true });
 cpSync(DIST, TARGET, { recursive: true });
 
-const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
 writeFileSync(
   join(TARGET, 'READ ME FIRST.txt'),
   `SCB Easy Knowledge Library
@@ -63,4 +76,9 @@ re-publish if it looks out of date.
 );
 
 console.log(`publish-library: published to ${TARGET}`);
-console.log('  colleagues open "Knowledge Library/index.html" from Box');
+}
+
+console.log('');
+console.log('  GitHub: commit and push in GitHub Desktop, then colleagues open the');
+console.log('          repo, click library/, and download or view index.html');
+console.log('  Box:    colleagues open "AI Folder/Knowledge Library/index.html"');

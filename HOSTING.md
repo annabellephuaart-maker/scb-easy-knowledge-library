@@ -1,6 +1,26 @@
 # Sharing the Knowledge Library
 
-Two ways, depending on whether colleagues need a folder or a URL.
+```bash
+npm run publish
+```
+
+Then commit and push in GitHub Desktop. That one command writes the built site to both
+places colleagues reach it from:
+
+| Where | Path | Who it serves |
+|---|---|---|
+| The repo | `product-codebase/library/` | Colleagues with GitHub access |
+| Box | `AI Folder/Knowledge Library/` | Colleagues who work through Box |
+
+Both are written from the same build, so they cannot drift.
+
+**Colleagues need the whole folder, not one file.** The library is 39 HTML pages plus its
+images. From GitHub: repo front page → green **Code** button → **Download ZIP** → unzip →
+open `library/index.html`. Sending a single `.html` gives them the first page and a dead
+link on every navigation.
+
+**Do not enable GitHub Pages on this repository.** On a personal account a Pages site is
+public regardless of repository visibility, which would put client research on an open URL.
 
 ## The simple one: publish into Box
 

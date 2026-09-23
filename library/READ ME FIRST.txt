@@ -1,0 +1,24 @@
+SCB Easy Knowledge Library
+Published 2026-09-23 09:04
+
+Open index.html in a browser. Nothing to install.
+
+WHAT THIS IS
+An internal research library for the SCB Easy overhaul. Market analysis,
+product research, cultural analysis and a design audit of twelve apps.
+
+HOW TO READ IT
+Much of this is deliberately unvalidated. Pages carry their own confidence
+markers — evidence quality, and notes such as "needs-research" or
+"needs-verification". Some pages are marked retired and kept only so older
+references still resolve.
+
+Start with the Plan Overview of a stream before its evidence pages. It says
+what that stream can and cannot establish.
+
+Nothing here has been tested with an SCB Easy user. Claims about what users
+need or want are hypotheses until primary research happens.
+
+STALENESS
+This is a copy, published at the date above. Ask annabellephua to
+re-publish if it looks out of date.
